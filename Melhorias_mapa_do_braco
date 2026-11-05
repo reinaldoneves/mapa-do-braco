@@ -2,3 +2,11 @@
 	1.Quando selecionamos no menu os power chords, somente a primeira região está sinalizada. Além disso, ele indica o uso de todas as cordas. Power Chords deve usar apenas três chordas vizinhas sempre, contendo apenas tônica, terça e quinta;
 	2.Quando digitamos "t" para indicar qual dedo apertar determinada nota, nada acontece;
 	3. Algo no estilo continua quebrando em linhas os elementos do topo da página, reconsidere e corrija isso.
+	4. Ficar com o número dentro do círculo, antecipado por uma barra, não é legal. Vamos deixar a indicação do dedo fora do círculo da nota, levemente abaixo do círculo e em uma fonte um pouco menor, de modo a não confundir o leitor.
+	5. Além disso, quando a função de biblioteca ou acordes for ativada, possibilite a seleção do combobox da seguinte forma:
+Menu/Estilo/Combobox "Mostrar"
+	Nota (Cifra)
+	Dedo
+	Nota + Dedo
+	Nota + Função Cordal ou grau da escala (F,3,5,7, etc)
+	Função apenas
