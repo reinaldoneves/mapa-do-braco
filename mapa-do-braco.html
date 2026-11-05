@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mapa · Braço do Violão &amp; Guitarra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Mapa do Braço",
+  "description": "Ferramenta interativa para visualizar escalas, acordes e notas no braço do violão, guitarra e baixo",
+  "applicationCategory": "MusicApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "BRL"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Reinaldo Neves",
+    "url": "https://www.reinaldoneves.com.br/sobre/"
+  }
+}
+</script>
+<style>
+#mdb-root{
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ---------- THEME: LIGHT (maple) ---------- */
+#mdb-root[data-theme="light"]{
+  --bg: #ece5d8;
+  --surface: #fbf8f2;
+  --surface-2: #f2ece1;
+  --border: #ddd2bd;
+  --text: #2b2620;
+  --text-dim: #7c7263;
+  --accent: #a9542f;
+  --accent-2: #4f6b53;
+  --wood-a: #e8d3a9;
+  --wood-b: #d9bc85;
+  --fret: #a89273;
+  --nut: #3a3128;
+  --string: #8c8577;
+  --inlay: #c8ad76;
+  --marker-stroke: #2b2620;
+  --canvas-shadow: rgba(70,50,20,0.18);
+}
+/* ---------- THEME: DARK (rosewood) ---------- */
+#mdb-root[data-theme="dark"]{
+  --bg: #1b1310;
+  --surface: #241a16;
+  --surface-2: #2c201a;
+  --border: #3c2c24;
+  --text: #f1e6db;
+  --text-dim: #b39d8d;
+  --accent: #e08a4c;
+  --accent-2: #7fae8b;
+  --wood-a: #4a2a22;
+  --wood-b: #3a2018;
+  --fret: #8a7360;
+  --nut: #f1e6db;
+  --string: #c9b8a6;
+  --inlay: #d9a24a;
+  --marker-stroke: #1b1310;
+  --canvas-shadow: rgba(0,0,0,0.45);
+}
+/* ---------- THEME: MINIMAL ---------- */
+#mdb-root[data-theme="minimal"]{
+  --bg: #f3f3f1;
+  --surface: #ffffff;
+  --surface-2: #f6f6f4;
+  --border: #dcdcd8;
+  --text: #121212;
+  --text-dim: #6b6b68;
+  --accent: #121212;
+  --accent-2: #5a5a5a;
+  --wood-a: #ffffff;
+  --wood-b: #ffffff;
+  --fret: #b8b8b4;
+  --nut: #121212;
+  --string: #3a3a3a;
+  --inlay: #d6d6d2;
+  --marker-stroke: #121212;
+  --canvas-shadow: rgba(0,0,0,0.08);
+}
+/* ---------- THEME: CYBERPUNK ---------- */
+#mdb-root[data-theme="cyberpunk"]{
+  --bg: #060a08;
+  --surface: #0b1210;
+  --surface-2: #0f1a16;
+  --border: #163a2c;
+  --text: #c8ffe4;
+  --text-dim: #5fa98a;
+  --accent: #39ff8f;
+  --accent-2: #ff4fa3;
+  --wood-a: #081310;
+  --wood-b: #050a08;
+  --fret: #1f5c40;
+  --nut: #39ff8f;
+  --string: #2fae72;
+  --inlay: #39ff8f;
+  --marker-stroke: #060a08;
+  --canvas-shadow: rgba(57,255,143,0.15);
+}
+
+#mdb-root, #mdb-root *{box-sizing:border-box;}
+#mdb-root{
+  margin:0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: background .25s ease, color .25s ease;
+}
+
+.shell{
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+.masthead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:22px;
+  flex-wrap:wrap;
+}
+.masthead h1{
+  font-family: var(--font-display);
+  font-weight:600;
+  font-size: 34px;
+  letter-spacing: -0.01em;
+  margin:0;
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+.masthead h1 .accent-dot{ color: var(--accent); }
+.masthead p{
+  margin:6px 0 0;
+  color: var(--text-dim);
+  font-size:14px;
+  max-width:520px;
+}
+.theme-switch{
+  display:flex;
+  gap:6px;
+  background: var(--surface);
+  border:1px solid var(--border);
+  padding:5px;
+  border-radius: 999px;
+}
+.theme-switch button{
+  border:none;
+  background:transparent;
+  width:30px;height:30px;
+  border-radius:50%;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.theme-switch button.active{ box-shadow: 0 0 0 2px var(--accent) inset; }
+.swatch{ width:16px;height:16px;border-radius:50%; display:block; }
+.sw-light{ background: linear-gradient(135deg,#e8d3a9,#a9542f); }
+.sw-dark{ background: linear-gradient(135deg,#4a2a22,#e08a4c); }
+.sw-minimal{ background: linear-gradient(135deg,#fff,#121212); border:1px solid #ccc;}
+.sw-cyberpunk{ background: linear-gradient(135deg,#39ff8f,#060a08); }
+
+.layout{
+  display:grid;
+  grid-template-columns: 1fr;
+  align-items:start;
+}
+
+/* ---------- PANEL / TABS ---------- */
+.panel{
+  position:fixed;
+  top:16px;
+  left:16px;
+  bottom:16px;
+  width:min(300px, calc(100vw - 32px));
+  z-index:80;
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  box-shadow:0 18px 50px var(--canvas-shadow);
+  transform:translateX(calc(-100% - 24px));
+  transition:transform .25s ease;
+}
+#mdb-root.menu-open .panel{ transform:translateX(0); }
+.menu-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:70;
+  background:rgba(0,0,0,.35);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+#mdb-root.menu-open .menu-backdrop{ opacity:1; pointer-events:auto; }
+.menu-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  width:auto;
+  padding:8px 12px;
+}
+.tabs{
+  display:flex;
+  border-bottom:1px solid var(--border);
+}
+.tabs button{
+  flex:1;
+  padding:11px 4px;
+  white-space:nowrap;
+  background:transparent;
+  border:none;
+  font-family: var(--font-body);
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  color: var(--text-dim);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+}
+.tabs button.active{
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tab-panel{ display:none; padding:16px; }
+.tab-panel.active{ display:block; }
+
+.field{ margin-bottom:14px; }
+.field:last-child{ margin-bottom:0; }
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color: var(--text-dim);
+  margin-bottom:6px;
+}
+.field-row{ display:flex; gap:10px; }
+.field-row .field{ flex:1; }
+
+#mdb-root select, #mdb-root input[type="text"], #mdb-root input[type="number"]{
+  width:100%;
+  padding:8px 10px;
+  border-radius: var(--radius-sm);
+  border:1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size:13px;
+}
+#mdb-root select:focus, #mdb-root input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+
+.chip-row{ display:flex; gap:6px; flex-wrap:wrap; }
+.chip{
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size:12px;
+  cursor:pointer;
+  font-weight:500;
+}
+.chip.active{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+.btn{
+  padding:9px 14px;
+  border-radius: var(--radius-sm);
+  border:1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  width:100%;
+}
+.btn:hover{ filter:brightness(1.05); }
+.btn.primary{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+.btn.ghost{ background:transparent; }
+.btn.small{ padding:6px 10px; font-size:12px; width:auto; }
+.btn-row{ display:flex; gap:8px; }
+.btn-row .btn{ flex:1; }
+
+.string-tuner{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:6px;
+}
+.string-tuner .row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+}
+.string-tuner .row span{ width:52px; color:var(--text-dim); font-family:var(--font-mono); }
+.string-tuner select{ flex:1; padding:5px 8px; font-size:12px; }
+
+.hint{
+  font-size:11.5px;
+  color: var(--text-dim);
+  line-height:1.5;
+  margin-top:8px;
+}
+.divider{ height:1px; background:var(--border); margin:14px 0; }
+
+.color-input{
+  display:flex; align-items:center; gap:8px;
+}
+.color-input input[type=color]{
+  width:36px;height:30px;border:1px solid var(--border);border-radius:8px;padding:2px;background:var(--surface-2);
+}
+.range-row{ display:flex; align-items:center; gap:8px; }
+.range-row input[type=range]{ flex:1; accent-color:var(--accent); }
+.range-row output{ font-family:var(--font-mono); font-size:12px; width:28px; text-align:right; }
+
+/* ---------- MAIN STAGE ---------- */
+.stage{
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding:18px;
+}
+.stage-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.stage-title{ font-size:14px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em; }
+
+.stage-actions{ display:flex; gap:6px; }
+.icon-btn{
+  width:34px;height:34px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+}
+.icon-btn:disabled{ opacity:.35; cursor:default; }
+.icon-btn.active{ background:var(--accent); border-color:var(--accent); color:var(--surface); }
+
+.mode-bar{
+  display:none;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding:12px 14px;
+  margin-bottom:14px;
+}
+.mode-bar.active{ display:flex; }
+.mode-bar .field{ margin:0; min-width:130px; }
+.mode-bar .field.grow{ flex:1; min-width:180px; }
+
+.canvas-wrap{
+  position:relative;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border:1px solid var(--border);
+  overflow:auto;
+  box-shadow: inset 0 0 24px var(--canvas-shadow);
+}
+canvas#fret{
+  display:block;
+  width:100%;
+  height:auto;
+  cursor:pointer;
+  touch-action:none;
+}
+@media (min-width: 701px){
+  canvas#fret.orientation-vertical{
+    width:auto;
+    height:min(72vh, 820px);
+    max-width:100%;
+    margin:0 auto;
+  }
+}
+.staff-wrap{
+  margin-top:14px;
+  padding:14px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+}
+.staff-wrap[hidden]{ display:none; }
+.staff-wrap{ overflow-x:auto; }
+#mdb-root [hidden]{ display:none !important; }
+.staff-heading{
+  margin:0 0 8px;
+  color:var(--text-dim);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+canvas#staff{
+  display:block;
+  width:100%;
+  height:180px;
+}
+
+.info-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+  font-size:12.5px;
+  color: var(--text-dim);
+}
+.info-bar kbd{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  padding:1px 7px;
+  border-radius:5px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--text);
+}
+#suggestion{
+  font-weight:600;
+  color:var(--text);
+}
+#suggestion .tag{
+  background:var(--accent);
+  color:var(--surface);
+  padding:1px 8px;
+  border-radius:6px;
+  margin-left:6px;
+  font-family:var(--font-mono);
+  font-size:11.5px;
+}
+
+/* ---------- PRESENTATION MODE ---------- */
+#mdb-root.presentation .masthead,
+#mdb-root.presentation .layout > .panel,
+#mdb-root.presentation .menu-toggle,
+#mdb-root.presentation .menu-backdrop,
+#mdb-root.presentation .stage-top,
+#mdb-root.presentation .mode-bar,
+#mdb-root.presentation .info-bar{
+  display:none !important;
+}
+#mdb-root.presentation .staff-wrap{ display:none !important; }
+#mdb-root.presentation .shell{ max-width:100%; padding:0; height:100vh; }
+#mdb-root.presentation .layout{ grid-template-columns:1fr; height:100%; }
+#mdb-root.presentation .stage{ height:100%; border:none; border-radius:0; display:flex; align-items:center; justify-content:center; }
+#mdb-root.presentation .canvas-wrap{ border:none; box-shadow:none; background:transparent; width:100%; }
+.exit-presentation{
+  position:fixed; top:18px; right:18px; z-index:50;
+  display:none;
+}
+#mdb-root.presentation .exit-presentation{ display:block; }
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  background:var(--text); color:var(--bg);
+  padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600;
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  z-index:100;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+/* ---------- Saved diagrams list ---------- */
+.saved-list{ display:flex; flex-direction:column; gap:6px; max-height:180px; overflow:auto; }
+.saved-item{
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+  padding:6px 8px; font-size:12px;
+}
+.saved-item button{ background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:13px; }
+.saved-item .load{ flex:1; text-align:left; background:none; border:none; color:var(--text); cursor:pointer; font-weight:600; font-size:12px; }
+
+::-webkit-scrollbar{ height:10px; width:10px; }
+::-webkit-scrollbar-thumb{ background: var(--border); border-radius:6px; }
+
+/* ---------- MOBILE ---------- */
+@media (max-width:700px){
+  .shell{ padding:16px 12px 36px; }
+  .masthead{ align-items:flex-start; gap:12px; margin-bottom:16px; }
+  .masthead h1{ font-size:27px; }
+  .masthead p{ font-size:13px; line-height:1.45; }
+  .theme-switch button{ width:40px; height:40px; }
+  .swatch{ width:19px; height:19px; }
+
+  .panel{ top:8px; left:8px; bottom:8px; width:calc(100vw - 16px); border-radius:14px; }
+  .tab-panel{ padding:14px; }
+  .tabs button{ min-height:44px; padding:10px 4px; }
+  .field-row{ flex-direction:column; gap:0; }
+  .field-row .field{ width:100%; }
+  #mdb-root select, #mdb-root input[type="text"], #mdb-root input[type="number"], #mdb-root .btn, #mdb-root .chip{ min-height:44px; font-size:14px; }
+  .chip{ padding:8px 13px; }
+  .btn.small{ min-height:40px; padding:7px 11px; }
+  .string-tuner .row{ min-height:40px; }
+  .string-tuner .row select{ min-height:40px; }
+
+  .stage{ padding:12px; border-radius:14px; }
+  .stage-top{ align-items:center; margin-bottom:10px; }
+  .stage-title{ display:none; }
+  .stage-actions{ margin-left:auto; }
+  .menu-toggle{ min-height:42px; }
+  .icon-btn{ width:42px; height:42px; font-size:18px; }
+  .staff-toggle{ min-height:42px; }
+  .canvas-wrap{ -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; }
+  canvas#fret.mobile-scroll-x{ width:auto; min-width:760px; touch-action:pan-x; }
+  canvas#fret.mobile-scroll-y{ width:100%; touch-action:pan-y; }
+  .info-bar{ align-items:flex-start; line-height:1.45; }
+  .info-bar kbd{ display:none; }
+  .toast{ bottom:max(16px, env(safe-area-inset-bottom)); max-width:calc(100vw - 24px); text-align:center; }
+  .exit-presentation{ top:12px; right:12px; width:auto; min-height:44px; }
+}
+</style>
+</head>
+<body>
+<div id="mdb-root" data-theme="light">
+
+<button class="btn primary exit-presentation" id="exitPresentation">Sair da apresentação (Esc)</button>
+<div class="menu-backdrop" id="menuBackdrop" aria-hidden="true"></div>
+
+<div class="shell">
+  <header class="masthead">
+    <div>
+      <h1><span class="accent-dot">●</span> Mapa do Braço</h1>
+      <p>Diagrama interativo do braço para violão e guitarra — escalas, acordes e digitação, prontos para a aula.</p>
+    </div>
+    <div class="theme-switch" id="themeSwitch">
+      <button data-theme="light" class="active" title="Claro (madeira)"><span class="swatch sw-light"></span></button>
+      <button data-theme="dark" title="Escuro (rosewood)"><span class="swatch sw-dark"></span></button>
+      <button data-theme="minimal" title="Minimalista"><span class="swatch sw-minimal"></span></button>
+      <button data-theme="cyberpunk" title="Cyberpunk"><span class="swatch sw-cyberpunk"></span></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- ============ SIDE PANEL ============ -->
+    <aside class="panel" id="sidePanel" aria-label="Menu de configurações">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="braco">Braço</button>
+        <button class="tab-btn" data-tab="estilo">Estilo</button>
+        <button class="tab-btn" data-tab="acoes">Ações</button>
+        <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
+      </div>
+
+      <!-- BRAÇO TAB -->
+      <div class="tab-panel active" data-tab="braco">
+        <div class="field-row">
+          <div class="field">
+            <label for="numStrings">Cordas</label>
+            <select id="numStrings">
+              <option value="4">4 cordas (contrabaixo)</option>
+              <option value="6" selected>6 cordas</option>
+              <option value="7">7 cordas</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="numFrets">Trastes</label>
+            <select id="numFrets">
+              <option value="5">5</option>
+              <option value="12" selected>12</option>
+              <option value="15">15</option>
+              <option value="22">22</option>
+              <option value="24">24</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="handedness">Mão</label>
+            <select id="handedness">
+              <option value="right" selected>Destro</option>
+              <option value="left">Canhoto</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="orientation">Orientação</label>
+            <select id="orientation">
+              <option value="horizontal" selected>Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="tuningPreset">Afinação (preset)</label>
+          <select id="tuningPreset">
+            <option value="standard">Padrão (E A D G B E)</option>
+            <option value="dropd">Drop D</option>
+            <option value="openg">Aberta em G</option>
+            <option value="opend">Aberta em D</option>
+            <option value="dadgad">DADGAD</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cordas (grave → aguda)</label>
+          <div class="string-tuner" id="stringTuner"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="field">
+          <label>Enarmonia</label>
+          <div class="chip-row">
+            <button class="chip active" id="enhSharp">Sustenido (♯)</button>
+            <button class="chip" id="enhFlat">Bemol (♭)</button>
+          </div>
+          <p class="hint">Duplo clique numa nota alterna a grafia só dela.</p>
+        </div>
+      </div>
+
+      <!-- ESTILO TAB -->
+      <div class="tab-panel" data-tab="estilo">
+        <div class="field">
+          <label>Mostrar</label>
+          <select id="displayMode">
+            <option value="note">Nota (cifra)</option>
+            <option value="finger">Dedo</option>
+            <option value="both">Nota + dedo</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Formato do marcador</label>
+          <select id="markerShape">
+            <option value="circle" selected>Círculo preenchido</option>
+            <option value="ring">Círculo vazado</option>
+            <option value="square">Quadrado</option>
+            <option value="diamond">Diamante</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Cor da corda</label>
+            <div class="color-input"><input type="color" id="stringColor" value="#8c8577"></div>
+          </div>
+          <div class="field">
+            <label>Espessura trastes</label>
+            <div class="range-row"><input type="range" id="fretThickness" min="1" max="6" value="2"><output id="fretThicknessOut">2</output></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Marcadores de casa (inlays)</label>
+          <div class="chip-row">
+            <button class="chip active" id="inlayOn">Mostrar</button>
+            <button class="chip" id="inlayOff">Ocultar</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Cor por nota</label>
+          <div class="chip-row">
+            <button class="chip active" id="colorByNoteOn">Ativado</button>
+            <button class="chip" id="colorByNoteOff">Cor única</button>
+          </div>
+          <p class="hint">Quando desativado, todos os marcadores usam a cor de destaque do tema.</p>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Partitura</label>
+          <div class="chip-row">
+            <button class="chip" id="staffOn">Mostrar</button>
+            <button class="chip active" id="staffOff">Ocultar</button>
+          </div>
+          <p class="hint">Exibe abaixo do braço as notas na ordem em que foram selecionadas.</p>
+        </div>
+      </div>
+
+      <!-- AÇÕES TAB -->
+      <div class="tab-panel" data-tab="acoes">
+        <div class="field">
+          <div class="btn-row">
+            <button class="btn" id="undoBtn">↶ Desfazer</button>
+            <button class="btn" id="redoBtn">↷ Refazer</button>
+          </div>
+        </div>
+        <div class="field">
+          <button class="btn" id="clearBtn">🗑 Limpar tudo</button>
+        </div>
+        <div class="field">
+          <button class="btn primary" id="presentBtn">⛶ Modo apresentação</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="field">
+          <label for="diagramName">Salvar diagrama</label>
+          <div class="btn-row">
+            <input type="text" id="diagramName" placeholder="Nome do diagrama">
+            <button class="btn small" id="saveBtn">Salvar</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Diagramas salvos</label>
+          <div class="saved-list" id="savedList"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="field">
+          <label>Exportar</label>
+          <div class="btn-row">
+            <button class="btn small" id="exportPng">PNG</button>
+            <button class="btn small" id="exportSvg">SVG</button>
+            <button class="btn small" id="exportPdf">PDF</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="btn-row">
+            <button class="btn small" id="exportJson">Baixar JSON</button>
+            <button class="btn small" id="importJsonBtn">Importar JSON</button>
+          </div>
+          <input type="file" id="importJsonInput" accept="application/json" style="display:none">
+        </div>
+        <div class="field">
+          <button class="btn" id="shareBtn">🔗 Copiar link compartilhável</button>
+        </div>
+      </div>
+
+      <!-- BIBLIOTECA TAB -->
+      <div class="tab-panel" data-tab="biblioteca">
+        <div class="field">
+          <label>Tipo</label>
+          <div class="chip-row">
+            <button class="chip active" id="libModeChord" type="button">Acordes</button>
+            <button class="chip" id="libModeScale" type="button">Escalas</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="libRoot">Tônica</label>
+          <select id="libRoot"></select>
+        </div>
+
+        <div id="libChordBlock">
+          <div class="field">
+            <label for="libChordType">Acorde</label>
+            <select id="libChordType"></select>
+          </div>
+          <div class="field">
+            <label for="libInversion">Inversão</label>
+            <select id="libInversion"></select>
+          </div>
+          <div class="field">
+            <label for="libVoicing">Forma no braço</label>
+            <select id="libVoicing"></select>
+          </div>
+        </div>
+
+        <div id="libScaleBlock" hidden>
+          <div class="field">
+            <label for="libScaleType">Escala</label>
+            <select id="libScaleType"></select>
+          </div>
+          <div class="field">
+            <label for="libScalePos">Posição</label>
+            <select id="libScalePos"></select>
+          </div>
+        </div>
+
+        <p class="hint" id="libInfo"></p>
+        <div class="field">
+          <button class="btn primary" id="libApply" type="button">Aplicar no braço</button>
+        </div>
+        <p class="hint">Substitui as notas marcadas (Ctrl+Z desfaz). Depois de aplicar, você continua podendo editar nota a nota. As formas são calculadas para a afinação e o número de cordas atuais.</p>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN STAGE ============ -->
+    <main class="stage">
+      <div class="stage-top">
+        <button class="btn menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="sidePanel">☰ Menu</button>
+        <div class="stage-title">Marcação livre de notas</div>
+        <div class="stage-actions">
+          <button class="icon-btn" id="audioToggle" title="Tocar ao inserir nota" aria-pressed="false">🔈</button>
+          <button class="icon-btn" id="playBtn" title="Tocar notas marcadas">▶</button>
+          <button class="btn small staff-toggle" id="staffToggle" type="button" title="Mostrar partitura" aria-pressed="false">♫ Partitura: OFF</button>
+          <button class="icon-btn" id="fullscreenBtn" title="Tela cheia">⛶</button>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="fret" width="1200" height="480"></canvas>
+      </div>
+
+      <section class="staff-wrap" id="staffWrap" hidden aria-label="Partitura das notas selecionadas">
+        <p class="staff-heading">Partitura · notas selecionadas</p>
+        <canvas id="staff" width="1000" height="380"></canvas>
+      </section>
+
+      <div class="info-bar">
+        <span id="selectedInfo">Nenhuma nota selecionada</span>
+        <span id="suggestion"></span>
+        <span><kbd>clique</kbd> add/remove · <kbd>clique-direito</kbd> corda solta = abafar · <kbd>1-4</kbd> <kbd>T</kbd> dedo · <kbd>Del</kbd> remove · <kbd>Ctrl+Z</kbd> desfazer · <kbd>2×clique</kbd> enarmonia</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   1. DADOS MUSICAIS
+============================================================ */
+const NOTE_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const NOTE_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#8e44ad','#e84393','#fd79a8','#00b894','#0984e3'];
+
+const TUNING_PRESETS = {
+  standard: { label:'Padrão (E A D G B E)', midi:[40,45,50,55,59,64] },
+  dropd:    { label:'Drop D',               midi:[38,45,50,55,59,64] },
+  openg:    { label:'Aberta em G',          midi:[38,43,50,55,59,62] },
+  opend:    { label:'Aberta em D',          midi:[38,45,50,54,57,62] },
+  dadgad:   { label:'DADGAD',               midi:[38,45,50,55,57,62] }
+};
+
+function tuningFromPreset(preset, numStrings){
+  const base = (TUNING_PRESETS[preset] || TUNING_PRESETS.standard).midi.slice();
+  if(numStrings === 7) return [base[0]-5].concat(base);
+  if(numStrings === 4){
+    // Contrabaixo: as 4 cordas mais graves do preset de guitarra, uma oitava abaixo.
+    return base.slice(0, 4).map(m => m - 12);
+  }
+  return base;
+}
+
+// Usado apenas para a "dica de nomenclatura" ao montar notas manualmente.
+const CHORD_QUALITIES = [
+  {id:'maj',      symbol:'',       intervals:[0,4,7]},
+  {id:'min',      symbol:'m',      intervals:[0,3,7]},
+  {id:'dim',      symbol:'dim',    intervals:[0,3,6]},
+  {id:'aug',      symbol:'aug',    intervals:[0,4,8]},
+  {id:'sus2',     symbol:'sus2',   intervals:[0,2,7]},
+  {id:'sus4',     symbol:'sus4',   intervals:[0,5,7]},
+  {id:'5',        symbol:'5',      intervals:[0,7]},
+  {id:'maj7',     symbol:'maj7',   intervals:[0,4,7,11]},
+  {id:'min7',     symbol:'m7',     intervals:[0,3,7,10]},
+  {id:'dom7',     symbol:'7',      intervals:[0,4,7,10]},
+  {id:'m7b5',     symbol:'m7b5',   intervals:[0,3,6,10]},
+  {id:'dim7',     symbol:'dim7',   intervals:[0,3,6,9]},
+  {id:'maj6',     symbol:'6',      intervals:[0,4,7,9]},
+  {id:'min6',     symbol:'m6',     intervals:[0,3,7,9]},
+  {id:'dom9',     symbol:'9',      intervals:[0,4,7,10,14]},
+  {id:'min9',     symbol:'m9',     intervals:[0,3,7,10,14]},
+  {id:'maj9',     symbol:'maj9',   intervals:[0,4,7,11,14]},
+  {id:'dom7sus4', symbol:'7sus4',  intervals:[0,5,7,10]}
+];
+
+const INLAY_FRETS = [3,5,7,9,15,17,19,21];
+const INLAY_FRETS_DOUBLE = [12,24];
+
+function pitchClass(midi){ return ((midi % 12) + 12) % 12; }
+function noteName(pc, enh){ return (enh === 'flat' ? NOTE_FLAT : NOTE_SHARP)[pitchClass(pc)]; }
+
+/* ============================================================
+   1b. BANCO DE ACORDES E ESCALAS (lógica pura, sem DOM)
+============================================================ */
+// Semitons a partir da tônica para cada grau, na grafia usada nas fórmulas abaixo.
+const TONE_TOKENS = {
+  'R':0, 'b2':1, 'b9':1, '2':2, '9':2, '#9':3, 'b3':3, '3':4, '4':5, '11':5,
+  '#11':6, 'b5':6, '5':7, '#5':8, 'b13':8, '6':9, '13':9, 'bb7':9, 'b7':10, '7':11
+};
+
+// Fórmula: "R 3 (5) b7" — graus entre parênteses são opcionais no braço
+// (a quinta e algumas extensões costumam ser omitidas em voicings reais).
+function parseTones(str){
+  return str.trim().split(/\s+/).map(tok => {
+    const optional = tok.startsWith('(') && tok.endsWith(')');
+    const name = optional ? tok.slice(1, -1) : tok;
+    return {name, iv: TONE_TOKENS[name], req: !optional};
+  });
+}
+
+const CHORD_LIBRARY = [
+  {group:'Tríades', items:[
+    {id:'maj',  label:'Maior',                       sym:'',      tones:'R 3 5'},
+    {id:'min',  label:'Menor',                       sym:'m',     tones:'R b3 5'},
+    {id:'dim',  label:'Diminuto',                    sym:'dim',   tones:'R b3 b5'},
+    {id:'aug',  label:'Aumentado',                   sym:'aug',   tones:'R 3 #5'},
+    {id:'sus2', label:'Suspenso 2ª (sus2)',          sym:'sus2',  tones:'R 2 5'},
+    {id:'sus4', label:'Suspenso 4ª (sus4)',          sym:'sus4',  tones:'R 4 5'},
+    {id:'p5',   label:'Power chord (5)',             sym:'5',     tones:'R 5'}
+  ]},
+  {group:'Sextas', items:[
+    {id:'6',    label:'Maior com sexta (6)',         sym:'6',     tones:'R 3 5 6'},
+    {id:'m6',   label:'Menor com sexta (m6)',        sym:'m6',    tones:'R b3 5 6'},
+    {id:'69',   label:'Sexta com nona (6/9)',        sym:'6/9',   tones:'R 3 (5) 6 9'}
+  ]},
+  {group:'Sétimas', items:[
+    {id:'maj7', label:'Maior com sétima maior (7M)', sym:'maj7',  tones:'R 3 (5) 7'},
+    {id:'7',    label:'Dominante (7)',               sym:'7',     tones:'R 3 (5) b7'},
+    {id:'m7',   label:'Menor com sétima (m7)',       sym:'m7',    tones:'R b3 (5) b7'},
+    {id:'mmaj7',label:'Menor com sétima maior (m7M)',sym:'m(maj7)',tones:'R b3 (5) 7'},
+    {id:'m7b5', label:'Meio-diminuto (m7♭5)',        sym:'m7(b5)',tones:'R b3 b5 b7'},
+    {id:'dim7', label:'Diminuto com sétima (dim7)',  sym:'dim7',  tones:'R b3 b5 bb7'},
+    {id:'7sus4',label:'Dominante suspenso (7sus4)',  sym:'7sus4', tones:'R 4 (5) b7'},
+    {id:'maj7s5',label:'Maior 7M com 5ª aumentada',  sym:'maj7(#5)',tones:'R 3 #5 7'},
+    {id:'7s5',  label:'Dominante aumentado (7♯5)',   sym:'7(#5)', tones:'R 3 #5 b7'},
+    {id:'7b5',  label:'Dominante com 5ª diminuta (7♭5)',sym:'7(b5)',tones:'R 3 b5 b7'}
+  ]},
+  {group:'Nonas (9ª)', items:[
+    {id:'add9', label:'Maior com nona (add9)',       sym:'add9',  tones:'R 3 5 9'},
+    {id:'madd9',label:'Menor com nona (m add9)',     sym:'m(add9)',tones:'R b3 5 9'},
+    {id:'maj9', label:'Maior 7M9',                   sym:'maj9',  tones:'R 3 (5) 7 9'},
+    {id:'9',    label:'Dominante 9',                 sym:'9',     tones:'R 3 (5) b7 9'},
+    {id:'m9',   label:'Menor 9',                     sym:'m9',    tones:'R b3 (5) b7 9'},
+    {id:'9sus4',label:'Dominante 9 suspenso',        sym:'9sus4', tones:'R 4 (5) b7 9'}
+  ]},
+  {group:'Décimas primeiras (11ª)', items:[
+    {id:'11',   label:'Dominante 11',                sym:'11',    tones:'R (3) (5) b7 (9) 11'},
+    {id:'m11',  label:'Menor 11',                    sym:'m11',   tones:'R b3 (5) b7 (9) 11'},
+    {id:'maj7s11',label:'Maior 7M com 11ª aumentada',sym:'maj7(#11)',tones:'R 3 (5) 7 #11'},
+    {id:'add11',label:'Maior com 11ª (add11)',       sym:'add11', tones:'R 3 5 11'}
+  ]},
+  {group:'Décimas terceiras (13ª)', items:[
+    {id:'13',   label:'Dominante 13',                sym:'13',    tones:'R 3 (5) b7 (9) 13'},
+    {id:'m13',  label:'Menor 13',                    sym:'m13',   tones:'R b3 (5) b7 (9) 13'},
+    {id:'maj13',label:'Maior 7M13',                  sym:'maj13', tones:'R 3 (5) 7 (9) 13'}
+  ]},
+  {group:'Dominantes alterados', items:[
+    {id:'7b9',  label:'Dominante com 9ª menor (7♭9)',sym:'7(b9)', tones:'R 3 (5) b7 b9'},
+    {id:'7s9',  label:'Dominante com 9ª aumentada (7♯9)',sym:'7(#9)',tones:'R 3 (5) b7 #9'},
+    {id:'7s11', label:'Dominante com 11ª aumentada (7♯11)',sym:'7(#11)',tones:'R 3 (5) b7 #11'},
+    {id:'7b13', label:'Dominante com 13ª menor (7♭13)',sym:'7(b13)',tones:'R 3 (5) b7 b13'}
+  ]}
+];
+CHORD_LIBRARY.forEach(g => g.items.forEach(c => { c.toneList = parseTones(c.tones); }));
+
+const SCALE_LIBRARY = [
+  {group:'Escalas principais', items:[
+    {id:'major',     label:'Maior (Jônio)',                iv:[0,2,4,5,7,9,11]},
+    {id:'minor',     label:'Menor natural (Eólio)',        iv:[0,2,3,5,7,8,10]},
+    {id:'harmMinor', label:'Menor harmônica',              iv:[0,2,3,5,7,8,11]},
+    {id:'melMinor',  label:'Menor melódica (ascendente)',  iv:[0,2,3,5,7,9,11]},
+    {id:'harmMajor', label:'Maior harmônica',              iv:[0,2,4,5,7,8,11]}
+  ]},
+  {group:'Modos da escala maior', items:[
+    {id:'dorian',    label:'Dórico',                       iv:[0,2,3,5,7,9,10]},
+    {id:'phrygian',  label:'Frígio',                       iv:[0,1,3,5,7,8,10]},
+    {id:'lydian',    label:'Lídio',                        iv:[0,2,4,6,7,9,11]},
+    {id:'mixolydian',label:'Mixolídio',                    iv:[0,2,4,5,7,9,10]},
+    {id:'locrian',   label:'Lócrio',                       iv:[0,1,3,5,6,8,10]}
+  ]},
+  {group:'Modos da menor melódica', items:[
+    {id:'dorianb2',  label:'Dórico ♭2 (frígio ♮6)',        iv:[0,1,3,5,7,9,10]},
+    {id:'lydianAug', label:'Lídio aumentado',              iv:[0,2,4,6,8,9,11]},
+    {id:'lydianDom', label:'Lídio dominante',              iv:[0,2,4,6,7,9,10]},
+    {id:'mixob6',    label:'Mixolídio ♭6',                 iv:[0,2,4,5,7,8,10]},
+    {id:'locrianN2', label:'Lócrio ♮2 (semilócrio)',       iv:[0,2,3,5,6,8,10]},
+    {id:'altered',   label:'Alterada (super lócrio)',      iv:[0,1,3,4,6,8,10]}
+  ]},
+  {group:'Modos da menor harmônica', items:[
+    {id:'locrianN6', label:'Lócrio ♮6',                    iv:[0,1,3,5,6,9,10]},
+    {id:'ionianS5',  label:'Jônio ♯5',                     iv:[0,2,4,5,8,9,11]},
+    {id:'dorianS4',  label:'Dórico ♯4',                    iv:[0,2,3,6,7,9,10]},
+    {id:'phrygDom',  label:'Frígio dominante',             iv:[0,1,4,5,7,8,10]},
+    {id:'lydianS2',  label:'Lídio ♯2',                     iv:[0,3,4,6,7,9,11]},
+    {id:'ultraloc',  label:'Super lócrio ♭♭7',             iv:[0,1,3,4,6,8,9]}
+  ]},
+  {group:'Pentatônicas e blues', items:[
+    {id:'majPent',   label:'Pentatônica maior',            iv:[0,2,4,7,9]},
+    {id:'minPent',   label:'Pentatônica menor',            iv:[0,3,5,7,10]},
+    {id:'blues',     label:'Blues menor (hexatônica)',     iv:[0,3,5,6,7,10]},
+    {id:'bluesMaj',  label:'Blues maior (hexatônica)',     iv:[0,2,3,4,7,9]}
+  ]},
+  {group:'Modos de transposição limitada (Messiaen)', items:[
+    {id:'mess1',     label:'Modo 1 · tons inteiros',                  iv:[0,2,4,6,8,10]},
+    {id:'mess2a',    label:'Modo 2 · octatônica (semitom-tom)',       iv:[0,1,3,4,6,7,9,10]},
+    {id:'mess2b',    label:'Modo 2 · octatônica (tom-semitom)',       iv:[0,2,3,5,6,8,9,11]},
+    {id:'mess3',     label:'Modo 3',                                  iv:[0,2,3,4,6,7,8,10,11]},
+    {id:'mess4',     label:'Modo 4',                                  iv:[0,1,2,5,6,7,8,11]},
+    {id:'mess5',     label:'Modo 5',                                  iv:[0,1,5,6,7,11]},
+    {id:'mess6',     label:'Modo 6',                                  iv:[0,2,4,5,6,8,10,11]},
+    {id:'mess7',     label:'Modo 7',                                  iv:[0,1,2,3,5,6,7,8,9,11]}
+  ]},
+  {group:'Exóticas e étnicas', items:[
+    {id:'dblHarm',   label:'Árabe (dupla harmônica / bizantina)',     iv:[0,1,4,5,7,8,11]},
+    {id:'hungMin',   label:'Húngara menor (cigana)',                  iv:[0,2,3,6,7,8,11]},
+    {id:'hungMaj',   label:'Húngara maior',                           iv:[0,3,4,6,7,9,10]},
+    {id:'persian',   label:'Persa',                                   iv:[0,1,4,5,6,8,11]},
+    {id:'neapMaj',   label:'Napolitana maior',                        iv:[0,1,3,5,7,9,11]},
+    {id:'neapMin',   label:'Napolitana menor',                        iv:[0,1,3,5,7,8,11]},
+    {id:'enigmatic', label:'Enigmática',                              iv:[0,1,4,6,8,10,11]},
+    {id:'prometheus',label:'Prometeu',                                iv:[0,2,4,6,9,10]},
+    {id:'hirajoshi', label:'Hirajoshi (Japão)',                       iv:[0,2,3,7,8]},
+    {id:'insen',     label:'In-sen (Japão)',                          iv:[0,1,5,7,10]},
+    {id:'iwato',     label:'Iwato (Japão)',                           iv:[0,1,5,6,10]},
+    {id:'kumoi',     label:'Kumoi (Japão)',                           iv:[0,2,3,7,9]},
+    {id:'augHexa',   label:'Aumentada (hexatônica)',                  iv:[0,3,4,7,8,11]},
+    {id:'bebopDom',  label:'Bebop dominante',                         iv:[0,2,4,5,7,9,10,11]},
+    {id:'bebopMaj',  label:'Bebop maior',                             iv:[0,2,4,5,7,8,9,11]}
+  ]}
+];
+
+function findLibraryItem(library, id){
+  for(const g of library){
+    const item = g.items.find(i => i.id === id);
+    if(item) return item;
+  }
+  return null;
+}
+
+const _pc = m => ((m % 12) + 12) % 12;
+
+// Encontra formas (voicings) de um acorde para QUALQUER afinação / nº de cordas.
+// Regras: notas do acorde apenas, baixo = grau escolhido (inversão), sem cordas
+// abafadas "no meio", extensão máxima de 4 casas e no máximo 4 dedos (com
+// pestana quando preciso). Devolve até `limit` formas, uma por região do braço.
+function findChordVoicings(tuning, numFrets, rootPc, def, bassIdx, limit){
+  const n = tuning.length;
+  const tones = def.toneList;
+  const pcs = tones.map(t => _pc(rootPc + t.iv));
+  const pcIndex = {};
+  pcs.forEach((pc, i) => { pcIndex[pc] = i; });
+  const bassPc = pcs[bassIdx];
+  const reqPcs = tones.map((t, i) => t.req ? pcs[i] : null).filter(v => v !== null);
+
+  function evaluate(frets, allowMissing){
+    let first = -1, last = -1;
+    for(let i = 0; i < n; i++){ if(frets[i] >= 0){ if(first < 0) first = i; last = i; } }
+    if(first < 0) return null;
+    for(let i = first; i <= last; i++){ if(frets[i] < 0) return null; }
+    if(_pc(tuning[first] + frets[first]) !== bassPc) return null;
+
+    const present = new Set();
+    for(let i = first; i <= last; i++) present.add(_pc(tuning[i] + frets[i]));
+    if(!present.has(pcs[0])) return null;                       // a tônica sempre aparece
+    const missing = reqPcs.filter(pc => !present.has(pc)).length;
+    if(missing > allowMissing) return null;
+
+    const fretted = [];
+    for(let i = first; i <= last; i++){ if(frets[i] > 0) fretted.push({i, f: frets[i]}); }
+    let minF = 0, maxF = 0, fingers = fretted.length, barre = null;
+    if(fretted.length){
+      minF = Math.min(...fretted.map(x => x.f));
+      maxF = Math.max(...fretted.map(x => x.f));
+      if(maxF - minF > 3) return null;
+      if(fretted.length > 4){
+        const S = fretted.filter(x => x.f === minF);
+        if(S.length < 2) return null;
+        const lo = S[0].i, hi = S[S.length - 1].i;
+        for(let i = lo; i <= hi; i++){ if(frets[i] < minF) return null; }
+        fingers = 1 + fretted.length - S.length;
+        if(fingers > 4) return null;
+        barre = {fret: minF, from: lo, to: hi};
+      }
+    }
+    const sounded = last - first + 1;
+    const opens = frets.filter((f, i) => i >= first && i <= last && f === 0).length;
+    // Cordas soltas só fazem sentido perto da pestana (formas "abertas").
+    if(opens > 0 && fretted.length && maxF > 4) return null;
+    const span = fretted.length ? (maxF - minF) : 0;
+    let score = sounded * 6 + present.size * 5 - missing * 9 - span * 2 - fingers * 1.2 - minF * 0.3;
+    if(minF <= 3) score += opens * 1.2;
+    return {frets: frets.slice(), first, last, sounded, minF, maxF, span, fingers, barre, missing, score};
+  }
+
+  function run(allowMissing){
+    const found = new Map();
+    const lastLo = Math.max(0, numFrets - 3);
+    for(let lo = 0; lo <= lastLo; lo++){
+      const opts = [];
+      for(let i = 0; i < n; i++){
+        const o = [-1];
+        if(pcIndex[_pc(tuning[i])] !== undefined) o.push(0);
+        for(let f = Math.max(1, lo); f <= Math.min(numFrets, lo + 3); f++){
+          if(pcIndex[_pc(tuning[i] + f)] !== undefined) o.push(f);
+        }
+        opts.push(o);
+      }
+      const arr = new Array(n).fill(-1);
+      (function rec(i){
+        if(i === n){
+          const key = arr.join(',');
+          if(found.has(key)) return;
+          const v = evaluate(arr, allowMissing);
+          if(v) found.set(key, v);
+          return;
+        }
+        for(const f of opts[i]){ arr[i] = f; rec(i + 1); }
+      })(0);
+    }
+    return [...found.values()];
+  }
+
+  let all = run(0);
+  if(!all.length) all = run(1);
+  if(!all.length) return [];
+  all.sort((a, b) => b.score - a.score);
+  const best = all[0].score;
+  // Uma forma por região do braço (a de maior nota em cada região),
+  // para o usuário ter opções realmente diferentes em vez de variações mínimas.
+  const picked = [];
+  for(const v of all){
+    if(v.score < best - 18) break;
+    if(picked.every(p => Math.abs(p.minF - v.minF) >= 2)) picked.push(v);
+    if(picked.length >= (limit || 8)) break;
+  }
+  return picked.sort((a, b) => a.minF - b.minF);
+}
+
+// Dedos: barra = dedo 1; demais em ordem de casa (e de corda, do grave ao agudo).
+function assignChordFingers(v, n){
+  const fingers = new Array(n).fill(null);
+  const fretted = [];
+  for(let i = v.first; i <= v.last; i++){ if(v.frets[i] > 0) fretted.push({i, f: v.frets[i]}); }
+  fretted.sort((a, b) => a.f - b.f || a.i - b.i);
+  let next = 1;
+  if(v.barre){
+    fretted.forEach(x => { if(x.f === v.barre.fret) fingers[x.i] = 1; });
+    next = 2;
+    fretted.filter(x => x.f !== v.barre.fret).forEach(x => { fingers[x.i] = String(Math.min(4, next++)); });
+    fretted.forEach(x => { if(fingers[x.i] === 1) fingers[x.i] = '1'; });
+  } else {
+    fretted.forEach(x => { fingers[x.i] = String(Math.min(4, next++)); });
+  }
+  return fingers;
+}
+
+// Janelas de escala: 5 casas começando em cada grau da escala sobre a corda mais grave.
+function scalePositionWindows(tuning, numFrets, rootPc, intervals){
+  const starts = new Set();
+  intervals.forEach(iv => {
+    const pc = _pc(rootPc + iv);
+    for(let f = 0; f < 12; f++){
+      if(_pc(tuning[0] + f) === pc){ starts.add(f); break; }
+    }
+  });
+  return [...starts].sort((a, b) => a - b)
+    .filter(f => f <= numFrets)
+    .map(f => ({lo: f, hi: Math.min(numFrets, f + 4)}));
+}
+
+function scaleNotesInRange(tuning, numFrets, rootPc, intervals, lo, hi){
+  const set = new Set(intervals.map(iv => _pc(rootPc + iv)));
+  const out = [];
+  for(let s = 0; s < tuning.length; s++){
+    for(let f = lo; f <= hi && f <= numFrets; f++){
+      if(set.has(_pc(tuning[s] + f))) out.push({stringIndex: s, fret: f});
+    }
+  }
+  return out;
+}
+
+
+/* ============================================================
+   2. ESTADO
+============================================================ */
+const state = {
+  theme: 'light',
+  numStrings: 6,
+  numFrets: 12,
+  handedness: 'right',
+  orientation: 'horizontal',
+  tuningPreset: 'standard',
+  tuning: tuningFromPreset('standard', 6),
+  enharmonic: 'sharp',
+  displayMode: 'note',
+  markerShape: 'circle',
+  stringColor: '#8c8577',
+  fretThickness: 2,
+  showInlays: true,
+  colorByNote: true,
+  showStaff: false,
+  playOnInsert: false,
+  markers: [],           // {stringIndex, fret, finger, enh}
+  stringStatus: new Array(6).fill('none'), // 'none' | 'muted'
+  selectedIndex: -1,
+  _logicalW: 1200,
+  _logicalH: 380
+};
+
+let history = [];
+let future = [];
+let audioCtx = null;
+
+/* ============================================================
+   2b. ÁUDIO (síntese Karplus-Strong — corda dedilhada, sem samples)
+============================================================ */
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function midiToFreq(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
+
+// Algoritmo de Karplus-Strong: simula fisicamente uma corda dedilhada
+// (estouro de ruído inicial + filtro de realimentação que vai apagando os
+// harmônicos), som bem mais próximo de um violão do que um oscilador puro,
+// e continua sendo só Web Audio API — nenhuma amostra/arquivo externo.
+function karplusStrongBuffer(ctx, freq, duration){
+  const sampleRate = ctx.sampleRate;
+  const totalSamples = Math.max(1, Math.floor(sampleRate * duration));
+  const period = Math.max(2, Math.round(sampleRate / freq));
+  const buffer = ctx.createBuffer(1, totalSamples, sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i = 0; i < period && i < totalSamples; i++){
+    // Ruído inicial moldado (menos agressivo que ruído branco puro),
+    // aproxima melhor o "ataque" de uma corda de nylon/aço dedilhada.
+    data[i] = (Math.random() * 2 - 1) * (1 - i / period * 0.3);
+  }
+  const decay = 0.9965; // controla o sustain: mais perto de 1 = corda soa por mais tempo
+  for(let i = period; i < totalSamples; i++){
+    data[i] = decay * 0.5 * (data[i - period] + data[i - period + 1]);
+  }
+  return buffer;
+}
+
+function playNote(midi, delay){
+  const ctx = ensureAudio();
+  const freq = midiToFreq(midi);
+  const t0 = ctx.currentTime + (delay || 0);
+  const duration = 2.2;
+  const buffer = karplusStrongBuffer(ctx, freq, duration);
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+
+  const body = ctx.createBiquadFilter(); // ressonância do tampo, dá "corpo"
+  body.type = 'peaking';
+  body.frequency.value = Math.min(400, freq * 2.2);
+  body.Q.value = 0.9;
+  body.gain.value = 5;
+
+  const tone = ctx.createBiquadFilter(); // suaviza os harmônicos mais agudos
+  tone.type = 'lowpass';
+  tone.frequency.value = Math.min(9000, freq * 14);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.85, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+
+  source.connect(body).connect(tone).connect(gain).connect(ctx.destination);
+  source.start(t0);
+  source.stop(t0 + duration);
+}
+// Toca o que está marcado no braço: se cada corda usada aparece no máximo uma
+// vez (voicing de acorde possível numa guitarra de verdade), toca tudo junto
+// (dedilhado/strum); se alguma corda repete (sequência que exige tempo,
+// como uma escala ou arpejo), toca nota após nota, na ordem em que foram
+// inseridas.
+function playSelection(){
+  if(!state.markers.length){ showToast('Nenhuma nota marcada para tocar'); return; }
+  const usedStrings = state.markers.map(m => m.stringIndex);
+  const isChordShape = new Set(usedStrings).size === usedStrings.length;
+  // Sempre do grave para o agudo pelo som real (MIDI), nunca pela ordem de
+  // inserção ou pelo índice físico da corda — o traste escolhido em cada
+  // corda pode inverter a relação "corda grave = som grave".
+  const ordered = [...state.markers].sort((a, b) =>
+    (state.tuning[a.stringIndex] + a.fret) - (state.tuning[b.stringIndex] + b.fret)
+  );
+  // A mesma altura em duas cordas (comum em formas de escala) soa uma vez só.
+  const midiOf = m => state.tuning[m.stringIndex] + m.fret;
+  const unique = ordered.filter((m, i) => i === 0 || midiOf(m) !== midiOf(ordered[i - 1]));
+  if(isChordShape){
+    unique.forEach((m, i) => playNote(midiOf(m), i * 0.035));
+  } else {
+    unique.forEach((m, i) => playNote(midiOf(m), i * 0.38));
+  }
+}
+
+/* ============================================================
+   3. REFERÊNCIAS DOM
+============================================================ */
+const els = {};
+function cacheEls(){
+  const ids = ['numStrings','numFrets','handedness','orientation',
+    'tuningPreset','stringTuner','enhSharp','enhFlat','displayMode','markerShape',
+    'stringColor','fretThickness','fretThicknessOut','inlayOn','inlayOff',
+    'colorByNoteOn','colorByNoteOff','staffOn','staffOff','staffWrap','staff','undoBtn','redoBtn','clearBtn',
+    'presentBtn','diagramName','saveBtn','savedList','exportPng','exportSvg',
+    'exportPdf','exportJson','importJsonBtn','importJsonInput','shareBtn',
+    'themeSwitch','fret','selectedInfo','suggestion','staffToggle','fullscreenBtn',
+    'exitPresentation','toast','menuToggle','menuBackdrop','audioToggle','playBtn',
+    'libModeChord','libModeScale','libRoot','libChordBlock','libChordType','libInversion',
+    'libVoicing','libScaleBlock','libScaleType','libScalePos','libInfo','libApply'];
+  ids.forEach(id => { els[id] = document.getElementById(id); });
+  els.canvas = els.fret;
+  els.root = document.getElementById('mdb-root');
+}
+
+/* ============================================================
+   4. HISTÓRICO (UNDO/REDO)
+============================================================ */
+const SNAPSHOT_FIELDS = ['numStrings','numFrets','handedness','orientation',
+  'tuningPreset','tuning','enharmonic','displayMode','markerShape','stringColor',
+  'fretThickness','showInlays','colorByNote','showStaff','markers','stringStatus'];
+
+function snapshot(){
+  const s = {};
+  SNAPSHOT_FIELDS.forEach(k => { s[k] = JSON.parse(JSON.stringify(state[k])); });
+  return s;
+}
+function applySnapshot(s){
+  SNAPSHOT_FIELDS.forEach(k => { if(k in s) state[k] = JSON.parse(JSON.stringify(s[k])); });
+  state.selectedIndex = -1;
+  fullResync();
+}
+function pushHistory(){
+  history.push(snapshot());
+  if(history.length > 60) history.shift();
+  future = [];
+  updateHistoryButtons();
+}
+function undo(){
+  if(!history.length) return;
+  future.push(snapshot());
+  const prev = history.pop();
+  applySnapshot(prev);
+  updateHistoryButtons();
+}
+function redo(){
+  if(!future.length) return;
+  history.push(snapshot());
+  const next = future.pop();
+  applySnapshot(next);
+  updateHistoryButtons();
+}
+function updateHistoryButtons(){
+  els.undoBtn.disabled = history.length === 0;
+  els.redoBtn.disabled = future.length === 0;
+}
+
+/* ============================================================
+   5. GEOMETRIA E DESENHO
+============================================================ */
+function cssVar(name){ return getComputedStyle(els.root).getPropertyValue(name).trim(); }
+
+function computeLogicalSize(){
+  const cell = 58, cellFret = 74;
+  const marginTop = 60, marginBottom = 25, marginSide = 60;
+  const marginNut = 34; // pestana sempre visível
+  const isHoriz = state.orientation === 'horizontal';
+  const innerStrings = (state.numStrings - 1) * cell;
+  const innerFrets = state.numFrets * cellFret;
+  let W, H;
+  if(isHoriz){
+    W = marginSide * 2 + marginNut + innerFrets;
+    H = marginTop + marginBottom + innerStrings;
+  } else {
+    W = marginSide * 2 + innerStrings;
+    H = marginTop + marginBottom + marginNut + innerFrets;
+  }
+  return {W, H, cell, cellFret, marginTop, marginBottom, marginSide, marginNut};
+}
+
+function computeGeometry(){
+  const dims = computeLogicalSize();
+  const isHoriz = state.orientation === 'horizontal';
+  const isRight = state.handedness === 'right';
+  const numStr = state.numStrings;
+  const numFrt = state.numFrets;
+
+  // Convenção da visão do músico destro (canhoto espelha):
+  //  - Horizontal: corda mais aguda (1ª, prima/mizinha) EM CIMA e a mais
+  //    grave (bordão/mizona, índice 0) EMBAIXO — como numa tablatura.
+  //  - Vertical (braço em pé, como nos diagramas de acordes): a mais
+  //    grave à ESQUERDA e a mais aguda à DIREITA.
+  function stringPos(stringIdx){
+    const visIdx = isHoriz
+      ? (isRight ? (numStr - 1 - stringIdx) : stringIdx)
+      : (isRight ? stringIdx : (numStr - 1 - stringIdx));
+    return isHoriz ? (dims.marginTop + visIdx * dims.cell)
+                   : (dims.marginSide + visIdx * dims.cell);
+  }
+  function fretPos(fret){
+    const base = isHoriz ? (dims.marginSide + dims.marginNut) : (dims.marginTop + dims.marginNut);
+    return base + fret * dims.cellFret;
+  }
+  function nutLinePos(){ return isHoriz ? (dims.marginSide + dims.marginNut) : (dims.marginTop + dims.marginNut); }
+
+  return { dims, isHoriz, isRight, numStr, numFrt, stringPos, fretPos, nutLinePos };
+}
+
+function resizeCanvas(){
+  const dims = computeLogicalSize();
+  state._logicalW = dims.W;
+  state._logicalH = dims.H;
+  const useMobileLayout = window.matchMedia('(max-width: 700px)').matches;
+  const needsHorizontalScroll = useMobileLayout && state.orientation === 'horizontal';
+  const isVerticalDesktop = state.orientation === 'vertical' && !useMobileLayout;
+  els.canvas.classList.toggle('mobile-scroll-x', needsHorizontalScroll);
+  els.canvas.classList.toggle('mobile-scroll-y', useMobileLayout && !needsHorizontalScroll);
+  // Na orientação vertical, o desenho é naturalmente estreito e alto (o braço
+  // é bem mais comprido que largo). Num notebook/desktop, deixar o canvas
+  // ocupar 100% da largura do painel faz a altura disparar (rolagem enorme)
+  // e ainda estica o buffer além da sua resolução real, borrando tudo.
+  // Em vez disso, limitamos pela ALTURA disponível na tela e deixamos a
+  // largura seguir a proporção real do braço.
+  els.canvas.classList.toggle('orientation-vertical', isVerticalDesktop);
+
+  let displayWidth;
+  if(needsHorizontalScroll){
+    // Em celulares, cada casa precisa continuar grande o suficiente para um toque.
+    // A rolagem horizontal evita achatar o braço e preserva a precisão do hit-test.
+    const fixedWidthPx = Math.max(760, dims.W);
+    els.canvas.style.width = fixedWidthPx + 'px';
+    displayWidth = fixedWidthPx;
+  } else if(isVerticalDesktop){
+    els.canvas.style.width = '';
+    const maxHeight = Math.min(window.innerHeight * 0.72, 820);
+    const wrapWidth = els.canvas.parentElement.clientWidth || dims.W;
+    displayWidth = Math.min(maxHeight * (dims.W / dims.H), wrapWidth);
+  } else {
+    els.canvas.style.width = '';
+    displayWidth = els.canvas.parentElement.clientWidth || dims.W;
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  // A resolução do buffer acompanha o tamanho REAL exibido (não só a
+  // proporção "lógica" do desenho), para o traço nunca sair borrado quando
+  // o CSS estica o canvas além do seu conteúdo intrínseco.
+  const scale = Math.max(1, displayWidth / dims.W) * dpr;
+  els.canvas.width = Math.round(dims.W * scale);
+  els.canvas.height = Math.round(dims.H * scale);
+  const ctx = els.canvas.getContext('2d');
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  draw();
+}
+
+function draw(){
+  const ctx = els.canvas.getContext('2d');
+  const g = computeGeometry();
+  const W = state._logicalW, H = state._logicalH;
+  ctx.clearRect(0, 0, W, H);
+  drawWoodBackground(ctx, g);
+  drawInlays(ctx, g);
+  drawFrets(ctx, g);
+  drawStrings(ctx, g);
+  drawFretNumbers(ctx, g);
+  drawOpenConnectors(ctx, g);
+  drawOpenPlaceholders(ctx, g);
+  drawStringStatus(ctx, g);
+  drawMarkers(ctx, g);
+  drawStaff();
+}
+
+function drawStaffLinesAndClef(ctx, o){
+  ctx.strokeStyle = o.ink;
+  ctx.fillStyle = o.ink;
+  ctx.lineWidth = 1.2;
+  for(let line = 0; line < 5; line++){
+    const y = o.top + line * o.space;
+    ctx.beginPath(); ctx.moveTo(o.left, y); ctx.lineTo(o.right, y); ctx.stroke();
+  }
+  ctx.font = '102px "Times New Roman", serif';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('\uD834\uDD1E', o.clefX, o.bottom + 5);
+}
+
+function drawStaff(){
+  els.staffWrap.hidden = !state.showStaff;
+  els.staffToggle.textContent = state.showStaff ? '♫ Partitura: ON' : '♫ Partitura: OFF';
+  els.staffToggle.title = state.showStaff ? 'Ocultar partitura' : 'Mostrar partitura';
+  els.staffToggle.setAttribute('aria-pressed', String(state.showStaff));
+  if(!state.showStaff) return;
+
+  const canvas = els.staff;
+  const baseWidth = Math.max(320, Math.round((els.staffWrap.clientWidth || 0) - 28) || Math.round(els.canvas.clientWidth || 1000));
+  const ink = cssVar('--text');
+  const muted = cssVar('--text-dim');
+  const space = 18;
+  const left = 78;
+  const clefX = 67; // 25px à direita da posição original (era 42)
+  const dpr = window.devicePixelRatio || 1;
+
+  if(!state.markers.length){
+    const width = baseWidth;
+    const right = width - 22;
+    const height = 180;
+    canvas.style.width = '100%';
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    canvas.style.height = height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    const top = 38, bottom = top + space * 4;
+    drawStaffLinesAndClef(ctx, {left, right, top, bottom, space, clefX, ink});
+    ctx.fillStyle = muted;
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Selecione notas no braço para visualizá-las na pauta.', left + 18, bottom + 44);
+    return;
+  }
+
+  const staffStepByLetter = {C:0, D:1, E:2, F:3, G:4, A:5, B:6};
+  const reference = 30;
+  let notes = state.markers.map(marker => {
+    const midi = state.tuning[marker.stringIndex] + marker.fret;
+    const pc = pitchClass(midi);
+    const notatedMidi = midi + 12;
+    const octave = Math.floor(notatedMidi / 12) - 1;
+    const name = noteName(pc, marker.enh || state.enharmonic);
+    const diatonic = octave * 7 + staffStepByLetter[name[0]];
+    return {marker, midi, pc, name, diatonic};
+  });
+  // Ordena sempre do grave para o agudo, independente da ordem de inserção no braço.
+  notes.sort((a, b) => a.midi - b.midi);
+  // A mesma altura marcada em duas cordas aparece uma vez só na pauta.
+  notes = notes.filter((n, i) => i === 0 || n.midi !== notes[i - 1].midi);
+
+  // Com muitas notas (ex.: uma escala), a pauta ganha rolagem horizontal em vez de amontoar.
+  const neededWidth = left + 70 + (notes.length - 1) * 30 + 40;
+  const width = Math.max(baseWidth, neededWidth);
+  const right = width - 22;
+  canvas.style.width = width > baseWidth ? width + 'px' : '100%';
+
+  // Calcula, ANTES de fixar o tamanho do canvas, quantas linhas suplementares
+  // serão necessárias acima/abaixo da pauta — assim o canvas cresce sob
+  // demanda e nada fica cortado, para qualquer registro do instrumento.
+  const bottom0 = space * 4;
+  let minY0 = 0, maxY0 = bottom0;
+  notes.forEach(n => {
+    const y0 = bottom0 - (n.diatonic - reference) * (space / 2);
+    n._y0 = y0;
+    if(y0 < minY0) minY0 = y0;
+    if(y0 > maxY0) maxY0 = y0;
+  });
+  const padding = space * 0.7;
+  const extraAbove = Math.max(0, -minY0) + padding;
+  const extraBelow = Math.max(0, maxY0 - bottom0) + padding;
+
+  const top = 38 + extraAbove;
+  const bottom = top + space * 4;
+  const height = Math.round(bottom + extraBelow + 26);
+
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  canvas.style.height = height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  drawStaffLinesAndClef(ctx, {left, right, top, bottom, space, clefX, ink});
+
+  const startX = left + 70; // mais respiro em relação à clave quando há poucas notas
+  const stepX = notes.length === 1 ? 0 : (right - startX - 10) / (notes.length - 1);
+
+  notes.forEach((note, index) => {
+    const y = bottom - (note.diatonic - reference) * (space / 2);
+    const x = notes.length === 1 ? (startX + right) / 2 : startX + index * stepX;
+
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.2;
+    for(let ly = top - space; ly >= y - 0.01; ly -= space){
+      ctx.beginPath(); ctx.moveTo(x - 11, ly); ctx.lineTo(x + 11, ly); ctx.stroke();
+    }
+    for(let ly = bottom + space; ly <= y + 0.01; ly += space){
+      ctx.beginPath(); ctx.moveTo(x - 11, ly); ctx.lineTo(x + 11, ly); ctx.stroke();
+    }
+
+    ctx.fillStyle = state.colorByNote ? NOTE_COLORS[note.pc] : cssVar('--accent');
+    ctx.beginPath(); ctx.ellipse(x, y, 7.5, 5.5, -0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.stroke();
+    if(note.name.length > 1){
+      ctx.fillStyle = ink;
+      ctx.font = '17px serif';
+      ctx.fillText(note.name[1] === '#' ? '#' : 'b', x - 21, y + 5);
+    }
+  });
+}
+
+// Limites reais do braço, compartilhados pelo fundo e pela numeração.
+const OPEN_ZONE_GAP = 34; // distância do zona de corda solta/abafada até a pestana
+
+function getNeckBounds(g){
+  // Respiro pequeno e fixo (não proporcional ao espaçamento entre cordas),
+  // só o suficiente para a corda não ficar rente à borda do braço.
+  const s0 = g.stringPos(0), s1 = g.stringPos(g.numStr - 1);
+  const stringLo = Math.min(s0, s1);
+  const stringHi = Math.max(s0, s1);
+  const neckStart = g.fretPos(0);
+  const neckEnd = g.fretPos(g.numFrt);
+  const openPos = neckStart - OPEN_ZONE_GAP;
+  return {stringLo, stringHi, neckStart, neckEnd, openPos};
+}
+
+function drawWoodBackground(ctx, g){
+  const woodA = cssVar('--wood-a'), woodB = cssVar('--wood-b');
+  const b = getNeckBounds(g);
+
+  const grad = g.isHoriz ? ctx.createLinearGradient(0, b.stringLo, 0, b.stringHi)
+                          : ctx.createLinearGradient(b.stringLo, 0, b.stringHi, 0);
+  grad.addColorStop(0, woodA);
+  grad.addColorStop(1, woodB);
+  ctx.fillStyle = grad;
+  if(g.isHoriz){
+    ctx.fillRect(b.neckStart, b.stringLo, b.neckEnd - b.neckStart, b.stringHi - b.stringLo);
+  } else {
+    ctx.fillRect(b.stringLo, b.neckStart, b.stringHi - b.stringLo, b.neckEnd - b.neckStart);
+  }
+}
+
+function drawFrets(ctx, g){
+  const fretColor = cssVar('--fret');
+  const nutColor = cssVar('--nut');
+  for(let f = 0; f <= g.numFrt; f++){
+    const pos = g.fretPos(f);
+    const isNut = f === 0;
+    ctx.strokeStyle = isNut ? nutColor : fretColor;
+    ctx.lineWidth = isNut ? 7 : state.fretThickness;
+    ctx.beginPath();
+    if(g.isHoriz){
+      ctx.moveTo(pos, g.stringPos(0));
+      ctx.lineTo(pos, g.stringPos(g.numStr-1));
+    } else {
+      ctx.moveTo(g.stringPos(0), pos);
+      ctx.lineTo(g.stringPos(g.numStr-1), pos);
+    }
+    ctx.stroke();
+  }
+}
+
+// Espessura proporcional: a corda mais grave (índice 0) é sempre a mais grossa
+// e a mais aguda a mais fina, para qualquer número de cordas.
+function stringWidth(s, numStr){
+  const t = numStr > 1 ? (numStr - 1 - s) / (numStr - 1) : 0; // 0 = mais aguda … 1 = mais grave
+  return 1.1 + t * 4.3;
+}
+
+function drawStrings(ctx, g){
+  for(let s = 0; s < g.numStr; s++){
+    const pos = g.stringPos(s);
+    // Corda mais grossa (grave) = tuning[0]; espessura decresce até a mais fina (aguda).
+    const thicknessRank = g.numStr - 1 - s;
+    ctx.strokeStyle = state.stringColor;
+    ctx.lineWidth = stringWidth(s, g.numStr);
+    ctx.beginPath();
+    const startF = 0;
+    const from = g.fretPos(startF);
+    const to = g.fretPos(g.numFrt);
+    if(g.isHoriz){
+      ctx.moveTo(from, pos); ctx.lineTo(to, pos);
+    } else {
+      ctx.moveTo(pos, from); ctx.lineTo(pos, to);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawInlays(ctx, g){
+  if(!state.showInlays) return;
+  ctx.fillStyle = cssVar('--inlay');
+  const midStr = (g.stringPos(0) + g.stringPos(g.numStr-1)) / 2;
+  for(let f = 1; f <= g.numFrt; f++){
+    const single = INLAY_FRETS.includes(f);
+    const double = INLAY_FRETS_DOUBLE.includes(f);
+    if(!single && !double) continue;
+    const center = (g.fretPos(f-1) + g.fretPos(f)) / 2;
+    const r = 5.5;
+    if(single){
+      if(g.isHoriz) circle(ctx, center, midStr, r); else circle(ctx, midStr, center, r);
+    } else if(double){
+      const off = (g.stringPos(g.numStr-1) - g.stringPos(0)) * 0.22;
+      if(g.isHoriz){ circle(ctx, center, midStr - off, r); circle(ctx, center, midStr + off, r); }
+      else { circle(ctx, midStr - off, center, r); circle(ctx, midStr + off, center, r); }
+    }
+  }
+}
+function circle(ctx, x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); }
+
+function drawFretNumbers(ctx, g){
+  const b = getNeckBounds(g);
+  ctx.fillStyle = cssVar('--text-dim');
+  ctx.font = '11px sans-serif';
+  ctx.textBaseline = 'middle';
+  for(let f = 1; f <= g.numFrt; f++){
+    if(!INLAY_FRETS.includes(f) && !INLAY_FRETS_DOUBLE.includes(f)) continue;
+    const center = (g.fretPos(f-1) + g.fretPos(f)) / 2;
+    if(g.isHoriz){
+      ctx.textAlign = 'center';
+      ctx.fillText(String(f), center, b.stringHi + 14);
+    } else {
+      ctx.textAlign = 'left';
+      ctx.fillText(String(f), b.stringHi + 12, center);
+    }
+  }
+}
+
+function drawOpenConnectors(ctx, g){
+  const b = getNeckBounds(g);
+  ctx.strokeStyle = cssVar('--text-dim');
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 3]);
+  for(let s = 0; s < g.numStr; s++){
+    const hasOpenMarker = state.markers.some(m => m.stringIndex === s && m.fret === 0);
+    if(state.stringStatus[s] !== 'muted' && !hasOpenMarker) continue;
+    const pos = g.stringPos(s);
+    ctx.beginPath();
+    if(g.isHoriz){ ctx.moveTo(b.openPos + 20, pos); ctx.lineTo(b.neckStart, pos); }
+    else { ctx.moveTo(pos, b.openPos + 20); ctx.lineTo(pos, b.neckStart); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+// Indicador informativo: quando a corda solta ainda não foi marcada (nem
+// nota, nem X), mostra um círculo cinza vazado com a cifra da corda solta,
+// só como referência visual de onde clicar — não é uma nota "de verdade".
+function drawOpenPlaceholders(ctx, g){
+  const b = getNeckBounds(g);
+  const ghost = cssVar('--text-dim');
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for(let s = 0; s < g.numStr; s++){
+    if(state.stringStatus[s] === 'muted') continue;
+    if(findMarkerAt(s, 0) >= 0) continue;
+    const cx = g.isHoriz ? b.openPos : g.stringPos(s);
+    const cy = g.isHoriz ? g.stringPos(s) : b.openPos;
+    const pc = pitchClass(state.tuning[s]);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+    ctx.strokeStyle = ghost;
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = ghost;
+    ctx.fillText(noteName(pc, state.enharmonic), cx, cy + 1);
+  }
+}
+
+function drawStringStatus(ctx, g){
+  const b = getNeckBounds(g);
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for(let s = 0; s < g.numStr; s++){
+    if(state.stringStatus[s] !== 'muted') continue;
+    const pos = g.stringPos(s);
+    ctx.fillStyle = cssVar('--text-dim');
+    if(g.isHoriz){
+      ctx.fillText('X', b.openPos, pos);
+    } else {
+      ctx.fillText('X', pos, b.openPos);
+    }
+  }
+}
+
+function contrastTextColor(hex){
+  const h = String(hex).replace('#','').trim();
+  if(h.length !== 6) return '#ffffff';
+  const r = parseInt(h.slice(0,2),16), gg = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  const luma = (r*299 + gg*587 + b*114) / 1000; // percepção de brilho (YIQ)
+  return luma >= 150 ? '#161616' : '#ffffff';
+}
+
+function traceMarkerShape(ctx, cx, cy, r){
+  ctx.beginPath();
+  if(state.markerShape === 'square'){
+    ctx.rect(cx - r, cy - r, r * 2, r * 2);
+  } else if(state.markerShape === 'diamond'){
+    ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r, cy); ctx.closePath();
+  } else {
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  }
+}
+
+function drawMarkers(ctx, g){
+  const b = getNeckBounds(g);
+  state.markers.forEach((m, idx) => {
+    const midi = state.tuning[m.stringIndex] + m.fret;
+    const pc = pitchClass(midi);
+    let cx, cy;
+    if(m.fret === 0){
+      cx = g.isHoriz ? b.openPos : g.stringPos(m.stringIndex);
+      cy = g.isHoriz ? g.stringPos(m.stringIndex) : b.openPos;
+    } else {
+      const center = (g.fretPos(m.fret-1) + g.fretPos(m.fret)) / 2;
+      cx = g.isHoriz ? center : g.stringPos(m.stringIndex);
+      cy = g.isHoriz ? g.stringPos(m.stringIndex) : center;
+    }
+
+    const fillColor = state.colorByNote ? NOTE_COLORS[pc] : cssVar('--accent');
+    const r = 20;
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = idx === state.selectedIndex ? cssVar('--accent-2') : cssVar('--marker-stroke');
+    ctx.fillStyle = fillColor;
+
+    traceMarkerShape(ctx, cx, cy, r);
+    if(state.markerShape === 'ring'){ ctx.lineWidth = 3; ctx.stroke(); }
+    else { ctx.fill(); ctx.stroke(); }
+
+    // Tônica (notas vindas da Biblioteca): anel externo de destaque.
+    if(m.root){
+      traceMarkerShape(ctx, cx, cy, r + 5);
+      ctx.strokeStyle = cssVar('--accent-2');
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    const label = markerLabel(m, pc);
+    ctx.fillStyle = (state.markerShape === 'ring') ? cssVar('--text') : contrastTextColor(fillColor);
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, cy + 1);
+  });
+}
+
+function markerLabel(m, pc){
+  const enh = m.enh || state.enharmonic;
+  if(state.displayMode === 'finger') return m.finger || '';
+  if(state.displayMode === 'both') return noteName(pc, enh) + (m.finger ? '/' + m.finger : '');
+  return noteName(pc, enh);
+}
+
+/* ============================================================
+   6. INTERAÇÃO COM O CANVAS
+============================================================ */
+function eventToLogical(e){
+  const rect = els.canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const x = (clientX - rect.left) * (state._logicalW / rect.width);
+  const y = (clientY - rect.top) * (state._logicalH / rect.height);
+  return {x, y};
+}
+
+function hitTest(x, y){
+  const g = computeGeometry();
+  let bestString = -1, bestStringDist = Infinity;
+  for(let s = 0; s < g.numStr; s++){
+    const pos = g.stringPos(s);
+    const d = Math.abs(g.isHoriz ? y - pos : x - pos);
+    if(d < bestStringDist){ bestStringDist = d; bestString = s; }
+  }
+  if(bestStringDist > g.dims.cell * 0.42) return null;
+
+  const coord = g.isHoriz ? x : y;
+  const nutLine = g.fretPos(0);
+  const b = getNeckBounds(g);
+
+  // Zona única de "corda solta / corda abafada": à esquerda da pestana,
+  // claramente separada do braço. Clique esquerdo marca/remove a nota
+  // solta (com a cifra); clique direito alterna o X (corda abafada).
+  if(Math.abs(coord - b.openPos) <= 22){
+    return {stringIndex: bestString, zone: 'open'};
+  }
+
+  let bestFret = -1, bestFretDist = Infinity;
+  for(let f = 1; f <= g.numFrt; f++){
+    const center = (g.fretPos(f-1) + g.fretPos(f)) / 2;
+    const d = Math.abs(coord - center);
+    if(d < bestFretDist){ bestFretDist = d; bestFret = f; }
+  }
+  if(bestFretDist > g.dims.cellFret * 0.48) return null;
+  if(coord < nutLine) return null; // vão entre a zona de corda solta e a pestana: sem alvo
+  return {stringIndex: bestString, zone: 'fret', fret: bestFret};
+}
+
+function findMarkerAt(stringIndex, fret){
+  return state.markers.findIndex(m => m.stringIndex === stringIndex && m.fret === fret);
+}
+
+function toggleMute(stringIndex){
+  pushHistory();
+  const idx = findMarkerAt(stringIndex, 0);
+  if(idx >= 0) state.markers.splice(idx, 1); // corda solta com nota vira abafada: remove a nota
+  state.stringStatus[stringIndex] = state.stringStatus[stringIndex] === 'muted' ? 'none' : 'muted';
+  updateSuggestion();
+  draw();
+}
+
+function handleCanvasClick(e){
+  const {x, y} = eventToLogical(e);
+  const hit = hitTest(x, y);
+  if(!hit) return;
+  const fret = hit.zone === 'open' ? 0 : hit.fret;
+
+  const idx = findMarkerAt(hit.stringIndex, fret);
+  pushHistory();
+  if(idx >= 0){
+    state.markers.splice(idx, 1);
+    state.selectedIndex = -1;
+  } else {
+    state.markers.push({stringIndex: hit.stringIndex, fret, finger: null, enh: null});
+    state.selectedIndex = state.markers.length - 1;
+    if(state.stringStatus[hit.stringIndex] === 'muted') state.stringStatus[hit.stringIndex] = 'none';
+    if(state.playOnInsert) playNote(state.tuning[hit.stringIndex] + fret);
+  }
+  updateInfo();
+  updateSuggestion();
+  draw();
+}
+
+function handleCanvasDblClick(e){
+  const {x, y} = eventToLogical(e);
+  const hit = hitTest(x, y);
+  if(!hit) return;
+  const fret = hit.zone === 'open' ? 0 : hit.fret;
+  const idx = findMarkerAt(hit.stringIndex, fret);
+  if(idx < 0) return;
+  pushHistory();
+  const m = state.markers[idx];
+  const cur = m.enh || state.enharmonic;
+  m.enh = cur === 'flat' ? 'sharp' : 'flat';
+  draw();
+}
+
+function handleContextMenu(e){
+  e.preventDefault();
+  const {x, y} = eventToLogical(e);
+  const hit = hitTest(x, y);
+  if(!hit) return;
+  if(hit.zone === 'open'){ toggleMute(hit.stringIndex); return; }
+  const idx = findMarkerAt(hit.stringIndex, hit.fret);
+  if(idx < 0) return;
+  pushHistory();
+  state.markers.splice(idx, 1);
+  state.selectedIndex = -1;
+  updateInfo(); updateSuggestion(); draw();
+}
+
+function handleKeyDown(e){
+  if(e.key === 'Escape' && els.root.classList.contains('presentation')){
+    exitPresentation(); return;
+  }
+  if(e.key === 'Escape' && els.root.classList.contains('menu-open')){
+    setMenuOpen(false); return;
+  }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){ e.preventDefault(); undo(); return; }
+  if((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))){ e.preventDefault(); redo(); return; }
+
+  const sel = state.selectedIndex;
+  if(sel < 0 || sel >= state.markers.length) return;
+  if(e.key === 'Delete' || e.key === 'Backspace'){
+    e.preventDefault();
+    pushHistory();
+    state.markers.splice(sel, 1);
+    state.selectedIndex = -1;
+    updateInfo(); updateSuggestion(); draw();
+    return;
+  }
+  const fingerMap = {'1':'1','2':'2','3':'3','4':'4','t':'T','T':'T'};
+  if(e.key in fingerMap){
+    e.preventDefault();
+    pushHistory();
+    const m = state.markers[sel];
+    m.finger = (m.finger === fingerMap[e.key]) ? null : fingerMap[e.key];
+    updateInfo(); draw();
+  }
+}
+
+function updateInfo(){
+  const sel = state.selectedIndex;
+  if(sel >= 0 && sel < state.markers.length){
+    const m = state.markers[sel];
+    const pc = pitchClass(state.tuning[m.stringIndex] + m.fret);
+    const note = noteName(pc, m.enh || state.enharmonic);
+    els.selectedInfo.textContent = `Selecionada: corda ${state.numStrings - m.stringIndex}, casa ${m.fret} (${note}) · dedo: ${m.finger || 'nenhum'}`;
+  } else {
+    els.selectedInfo.textContent = 'Nenhuma nota selecionada';
+  }
+}
+
+/* ============================================================
+   7. SUGESTÃO DE NOME DE ACORDE (a partir das notas marcadas manualmente)
+============================================================ */
+function updateSuggestion(){
+  const pcs = [...new Set(state.markers.map(m => pitchClass(state.tuning[m.stringIndex] + m.fret)))];
+  if(pcs.length < 2){ els.suggestion.innerHTML = ''; return; }
+  let bassMidi = Infinity, bassPc = pcs[0];
+  state.markers.forEach(m => {
+    const midi = state.tuning[m.stringIndex] + m.fret;
+    if(midi < bassMidi){ bassMidi = midi; bassPc = pitchClass(midi); }
+  });
+  let best = null;
+  pcs.forEach(root => {
+    const rel = new Set(pcs.map(pc => pitchClass(pc - root)));
+    CHORD_QUALITIES.forEach(q => {
+      const qset = new Set(q.intervals.map(iv => iv % 12));
+      let match = 0;
+      qset.forEach(iv => { if(rel.has(iv)) match++; });
+      const score = match - Math.abs(rel.size - qset.size) * 0.5;
+      if(!best || score > best.score){ best = {root, quality: q, score}; }
+    });
+  });
+  if(!best){ els.suggestion.innerHTML = ''; return; }
+  let label = noteName(best.root, state.enharmonic) + best.quality.symbol;
+  if(bassPc !== best.root) label += '/' + noteName(bassPc, state.enharmonic);
+  els.suggestion.innerHTML = `Sugestão: <span class="tag">${label}</span>`;
+}
+
+/* ============================================================
+   8. UI: TEMA E ABAS
+============================================================ */
+function initTheme(){
+  els.themeSwitch.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-theme]');
+    if(!btn) return;
+    state.theme = btn.dataset.theme;
+    els.root.dataset.theme = state.theme;
+    [...els.themeSwitch.querySelectorAll('button')].forEach(b => b.classList.toggle('active', b === btn));
+    draw();
+  });
+}
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === btn.dataset.tab));
+    });
+  });
+}
+
+function setMenuOpen(isOpen){
+  els.root.classList.toggle('menu-open', isOpen);
+  els.menuToggle.setAttribute('aria-expanded', String(isOpen));
+  els.menuBackdrop.setAttribute('aria-hidden', String(!isOpen));
+  // Trava o scroll da página por trás enquanto o menu (painel fixo) está
+  // aberto — sem isso, rolar dentro do painel e rolar a página aconteciam
+  // ao mesmo tempo, uma experiência ruim especialmente incorporado num
+  // widget de página (o scroll "vaza" para o resto do site).
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function initMenu(){
+  els.menuToggle.addEventListener('click', () => {
+    setMenuOpen(!els.root.classList.contains('menu-open'));
+  });
+  els.menuBackdrop.addEventListener('click', () => setMenuOpen(false));
+}
+
+/* ============================================================
+   9. UI: BRAÇO (cordas, trastes, afinação, enarmonia)
+============================================================ */
+function populateNoteSelect(select, selectedPc){
+  select.innerHTML = '';
+  const table = state.enharmonic === 'flat' ? NOTE_FLAT : NOTE_SHARP;
+  table.forEach((name, pc) => {
+    const opt = document.createElement('option');
+    opt.value = String(pc);
+    opt.textContent = name;
+    if(pc === selectedPc) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function renderStringTuner(){
+  els.stringTuner.innerHTML = '';
+  for(let i = 0; i < state.numStrings; i++){
+    const row = document.createElement('div');
+    row.className = 'row';
+    const label = document.createElement('span');
+    label.textContent = (state.numStrings - i) + 'ª corda';
+    const select = document.createElement('select');
+    populateNoteSelect(select, pitchClass(state.tuning[i]));
+    select.addEventListener('change', () => {
+      pushHistory();
+      const newPc = parseInt(select.value, 10);
+      const oldMidi = state.tuning[i];
+      let newMidi = Math.round(oldMidi / 12) * 12 + newPc;
+      while(newMidi - oldMidi > 6) newMidi -= 12;
+      while(oldMidi - newMidi > 6) newMidi += 12;
+      state.tuning[i] = newMidi;
+      state.tuningPreset = 'custom';
+      els.tuningPreset.value = 'custom';
+      draw();
+    });
+    row.appendChild(label);
+    row.appendChild(select);
+    els.stringTuner.appendChild(row);
+  }
+}
+
+function setNumStrings(n){
+  pushHistory();
+  state.numStrings = n;
+  state.tuning = tuningFromPreset(state.tuningPreset === 'custom' ? 'standard' : state.tuningPreset, n);
+  state.markers = state.markers.filter(m => m.stringIndex < n);
+  state.stringStatus = new Array(n).fill('none');
+  renderStringTuner();
+  resizeCanvas();
+  updateInfo();
+}
+
+function initBracoTab(){
+  els.numStrings.addEventListener('change', () => setNumStrings(parseInt(els.numStrings.value, 10)));
+  els.numFrets.addEventListener('change', () => {
+    pushHistory();
+    state.numFrets = parseInt(els.numFrets.value, 10);
+    state.markers = state.markers.filter(m => m.fret <= state.numFrets);
+    resizeCanvas();
+  });
+  els.handedness.addEventListener('change', () => { pushHistory(); state.handedness = els.handedness.value; draw(); });
+  els.orientation.addEventListener('change', () => { pushHistory(); state.orientation = els.orientation.value; resizeCanvas(); });
+
+  els.tuningPreset.addEventListener('change', () => {
+    pushHistory();
+    state.tuningPreset = els.tuningPreset.value;
+    if(state.tuningPreset !== 'custom'){
+      state.tuning = tuningFromPreset(state.tuningPreset, state.numStrings);
+      renderStringTuner();
+      draw();
+    }
+  });
+
+  els.enhSharp.addEventListener('click', () => { pushHistory(); state.enharmonic = 'sharp'; toggleChips(els.enhSharp, els.enhFlat); refreshNoteSelects(); draw(); });
+  els.enhFlat.addEventListener('click', () => { pushHistory(); state.enharmonic = 'flat'; toggleChips(els.enhFlat, els.enhSharp); refreshNoteSelects(); draw(); });
+}
+function toggleChips(on, off){ on.classList.add('active'); off.classList.remove('active'); }
+
+function refreshNoteSelects(){
+  renderStringTuner();
+  refreshLibrary();
+}
+
+/* ============================================================
+   10. UI: ESTILO
+============================================================ */
+function initEstiloTab(){
+  els.displayMode.addEventListener('change', () => { state.displayMode = els.displayMode.value; draw(); });
+  els.markerShape.addEventListener('change', () => { state.markerShape = els.markerShape.value; draw(); });
+  els.stringColor.addEventListener('input', () => { state.stringColor = els.stringColor.value; draw(); });
+  els.fretThickness.addEventListener('input', () => {
+    state.fretThickness = parseInt(els.fretThickness.value, 10);
+    els.fretThicknessOut.textContent = state.fretThickness;
+    draw();
+  });
+  els.inlayOn.addEventListener('click', () => { state.showInlays = true; toggleChips(els.inlayOn, els.inlayOff); draw(); });
+  els.inlayOff.addEventListener('click', () => { state.showInlays = false; toggleChips(els.inlayOff, els.inlayOn); draw(); });
+  els.colorByNoteOn.addEventListener('click', () => { state.colorByNote = true; toggleChips(els.colorByNoteOn, els.colorByNoteOff); draw(); });
+  els.colorByNoteOff.addEventListener('click', () => { state.colorByNote = false; toggleChips(els.colorByNoteOff, els.colorByNoteOn); draw(); });
+  els.staffOn.addEventListener('click', () => { state.showStaff = true; toggleChips(els.staffOn, els.staffOff); draw(); });
+  els.staffOff.addEventListener('click', () => { state.showStaff = false; toggleChips(els.staffOff, els.staffOn); draw(); });
+  els.staffToggle.addEventListener('click', () => {
+    state.showStaff = !state.showStaff;
+    toggleChips(state.showStaff ? els.staffOn : els.staffOff, state.showStaff ? els.staffOff : els.staffOn);
+    draw();
+  });
+}
+
+/* ============================================================
+   11. UI: AÇÕES (undo/redo, limpar, salvar, exportar, share)
+============================================================ */
+function showToast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => els.toast.classList.remove('show'), 1800);
+}
+
+function initAcoesTab(){
+  els.undoBtn.addEventListener('click', undo);
+  els.redoBtn.addEventListener('click', redo);
+  els.clearBtn.addEventListener('click', () => {
+    pushHistory();
+    state.markers = [];
+    state.stringStatus = new Array(state.numStrings).fill('none');
+    state.selectedIndex = -1;
+    updateInfo(); updateSuggestion(); draw();
+  });
+  els.presentBtn.addEventListener('click', () => { els.root.classList.add('presentation'); resizeCanvas(); });
+  els.exitPresentation.addEventListener('click', exitPresentation);
+  els.fullscreenBtn.addEventListener('click', () => {
+    if(!document.fullscreenElement) els.root.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+  });
+  els.playBtn.addEventListener('click', playSelection);
+  els.audioToggle.addEventListener('click', () => {
+    state.playOnInsert = !state.playOnInsert;
+    els.audioToggle.classList.toggle('active', state.playOnInsert);
+    els.audioToggle.textContent = state.playOnInsert ? '🔊' : '🔈';
+    els.audioToggle.setAttribute('aria-pressed', String(state.playOnInsert));
+    if(state.playOnInsert) ensureAudio();
+  });
+
+  els.saveBtn.addEventListener('click', () => {
+    const name = (els.diagramName.value || '').trim();
+    if(!name){ showToast('Dê um nome ao diagrama'); return; }
+    const store = getSavedDiagrams();
+    store[name] = snapshot();
+    localStorage.setItem('mapa_do_braco_saved', JSON.stringify(store));
+    els.diagramName.value = '';
+    renderSavedList();
+    showToast('Diagrama salvo: ' + name);
+  });
+
+  els.exportPng.addEventListener('click', () => downloadDataUrl(els.canvas.toDataURL('image/png'), 'mapa_do_braco.png'));
+  els.exportSvg.addEventListener('click', exportSVG);
+  els.exportPdf.addEventListener('click', exportPDF);
+  els.exportJson.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(snapshot(), null, 2)], {type: 'application/json'});
+    downloadBlob(blob, 'mapa_do_braco.json');
+  });
+  els.importJsonBtn.addEventListener('click', () => els.importJsonInput.click());
+  els.importJsonInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        pushHistory();
+        applySnapshot(data);
+        showToast('Diagrama importado');
+      } catch(err){ showToast('Arquivo JSON inválido'); }
+    };
+    reader.readAsText(file);
+    els.importJsonInput.value = '';
+  });
+
+  els.shareBtn.addEventListener('click', () => {
+    const b64 = btoa(encodeURIComponent(JSON.stringify(snapshot())));
+    const url = location.origin + location.pathname + '#d=' + b64;
+    location.hash = 'd=' + b64;
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(() => showToast('Link copiado!')).catch(() => showToast('Link gerado (copie da barra de endereço)'));
+    else showToast('Link gerado (copie da barra de endereço)');
+  });
+
+  renderSavedList();
+}
+
+function exitPresentation(){
+  els.root.classList.remove('presentation');
+  resizeCanvas();
+}
+
+function getSavedDiagrams(){
+  try { return JSON.parse(localStorage.getItem('mapa_do_braco_saved') || '{}'); }
+  catch(e){ return {}; }
+}
+function renderSavedList(){
+  const store = getSavedDiagrams();
+  els.savedList.innerHTML = '';
+  Object.keys(store).forEach(name => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'load';
+    loadBtn.textContent = name;
+    loadBtn.addEventListener('click', () => { pushHistory(); applySnapshot(store[name]); showToast('Carregado: ' + name); });
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', () => {
+      delete store[name];
+      localStorage.setItem('mapa_do_braco_saved', JSON.stringify(store));
+      renderSavedList();
+    });
+    item.appendChild(loadBtn);
+    item.appendChild(delBtn);
+    els.savedList.appendChild(item);
+  });
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  downloadDataUrl(url, filename);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function downloadDataUrl(url, filename){
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function exportSVG(){
+  const g = computeGeometry();
+  const W = state._logicalW, H = state._logicalH;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  svg += `<rect width="${W}" height="${H}" fill="${cssVar('--surface-2')}"/>`;
+  for(let f = 0; f <= g.numFrt; f++){
+    const pos = g.fretPos(f);
+    const w = f === 0 ? 6 : state.fretThickness;
+    const color = f === 0 ? cssVar('--nut') : cssVar('--fret');
+    if(g.isHoriz) svg += `<line x1="${pos}" y1="${g.stringPos(0)}" x2="${pos}" y2="${g.stringPos(g.numStr-1)}" stroke="${color}" stroke-width="${w}"/>`;
+    else svg += `<line x1="${g.stringPos(0)}" y1="${pos}" x2="${g.stringPos(g.numStr-1)}" y2="${pos}" stroke="${color}" stroke-width="${w}"/>`;
+  }
+  for(let s = 0; s < g.numStr; s++){
+    const pos = g.stringPos(s);
+    const w = stringWidth(s, g.numStr);
+    if(g.isHoriz) svg += `<line x1="${g.fretPos(0)}" y1="${pos}" x2="${g.fretPos(g.numFrt)}" y2="${pos}" stroke="${state.stringColor}" stroke-width="${w}"/>`;
+    else svg += `<line x1="${pos}" y1="${g.fretPos(0)}" x2="${pos}" y2="${g.fretPos(g.numFrt)}" stroke="${state.stringColor}" stroke-width="${w}"/>`;
+  }
+  state.markers.forEach(m => {
+    const midi = state.tuning[m.stringIndex] + m.fret;
+    const pc = pitchClass(midi);
+    const nb = getNeckBounds(g);
+    const mid = m.fret === 0 ? nb.openPos : (g.fretPos(m.fret-1)+g.fretPos(m.fret))/2;
+    const cx = g.isHoriz ? mid : g.stringPos(m.stringIndex);
+    const cy = g.isHoriz ? g.stringPos(m.stringIndex) : mid;
+    const fill = state.colorByNote ? NOTE_COLORS[pc] : cssVar('--accent');
+    const label = markerLabel(m, pc);
+    if(m.root) svg += `<circle cx="${cx}" cy="${cy}" r="25" fill="none" stroke="${cssVar('--accent-2')}" stroke-width="2.5"/>`;
+    svg += `<circle cx="${cx}" cy="${cy}" r="20" fill="${fill}" stroke="${cssVar('--marker-stroke')}" stroke-width="2"/>`;
+    svg += `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="12" font-weight="bold" fill="${contrastTextColor(fill)}" font-family="sans-serif">${label}</text>`;
+  });
+  svg += '</svg>';
+  const blob = new Blob([svg], {type: 'image/svg+xml'});
+  downloadBlob(blob, 'mapa_do_braco.svg');
+}
+
+function exportPDF(){
+  try {
+    const { jsPDF } = window.jspdf;
+    const W = state._logicalW, H = state._logicalH;
+    const pdf = new jsPDF({orientation: W > H ? 'l' : 'p', unit: 'pt', format: [W, H]});
+    pdf.addImage(els.canvas.toDataURL('image/png'), 'PNG', 0, 0, W, H);
+    pdf.save('mapa_do_braco.pdf');
+  } catch(e){ showToast('Não foi possível gerar o PDF'); }
+}
+
+/* ============================================================
+   11b. UI: BIBLIOTECA (acordes e escalas prontos)
+============================================================ */
+const lib = {
+  mode: 'chord', root: 0,
+  chordId: 'maj', inversion: 0, voicingIdx: 0, voicings: [],
+  scaleId: 'major', scalePos: 'all', windows: []
+};
+
+function populateGroupedSelect(select, library, selectedId){
+  select.innerHTML = '';
+  library.forEach(group => {
+    const og = document.createElement('optgroup');
+    og.label = group.group;
+    group.items.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.id;
+      opt.textContent = item.label;
+      if(item.id === selectedId) opt.selected = true;
+      og.appendChild(opt);
+    });
+    select.appendChild(og);
+  });
+}
+
+function voicingLabel(v, k){
+  const notation = v.frets.map(f => f < 0 ? 'x' : f).join('-');
+  return `Forma ${k + 1} · ${notation}${v.barre ? ' · pestana' : ''}${v.missing ? ' · parcial' : ''}`;
+}
+
+function currentChordVoicings(){
+  const def = findLibraryItem(CHORD_LIBRARY, lib.chordId);
+  return findChordVoicings(state.tuning, state.numFrets, lib.root, def, lib.inversion, 8);
+}
+
+function chordFullName(def, inversion){
+  let name = noteName(lib.root, state.enharmonic) + def.sym;
+  if(inversion > 0) name += '/' + noteName(lib.root + def.toneList[inversion].iv, state.enharmonic);
+  return name;
+}
+
+function refreshLibrary(){
+  if(!els.libRoot) return;
+  populateNoteSelect(els.libRoot, lib.root);
+  els.libChordBlock.hidden = lib.mode !== 'chord';
+  els.libScaleBlock.hidden = lib.mode !== 'scale';
+  toggleChips(lib.mode === 'chord' ? els.libModeChord : els.libModeScale,
+              lib.mode === 'chord' ? els.libModeScale : els.libModeChord);
+
+  if(lib.mode === 'chord'){
+    const def = findLibraryItem(CHORD_LIBRARY, lib.chordId);
+    const maxInv = Math.min(4, def.toneList.length);
+    if(lib.inversion >= maxInv) lib.inversion = 0;
+    els.libInversion.innerHTML = '';
+    for(let i = 0; i < maxInv; i++){
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = (i === 0 ? 'Fundamental' : i + 'ª inversão') + ' · ' + chordFullName(def, i);
+      els.libInversion.appendChild(opt);
+    }
+    els.libInversion.value = String(lib.inversion);
+
+    lib.voicings = currentChordVoicings();
+    els.libVoicing.innerHTML = '';
+    if(!lib.voicings.length){
+      const opt = document.createElement('option');
+      opt.textContent = 'Nenhuma forma nesta afinação';
+      opt.disabled = true; opt.selected = true;
+      els.libVoicing.appendChild(opt);
+    } else {
+      lib.voicings.forEach((v, k) => {
+        const opt = document.createElement('option');
+        opt.value = String(k);
+        opt.textContent = voicingLabel(v, k);
+        els.libVoicing.appendChild(opt);
+      });
+      if(lib.voicingIdx >= lib.voicings.length) lib.voicingIdx = 0;
+      els.libVoicing.value = String(lib.voicingIdx);
+    }
+    const toneText = def.toneList.map(t => {
+      const n = noteName(lib.root + t.iv, state.enharmonic);
+      return t.req ? n : '(' + n + ')';
+    }).join(' · ');
+    els.libInfo.textContent = `${chordFullName(def, lib.inversion)} — notas: ${toneText}` +
+      (def.toneList.some(t => !t.req) ? '  (entre parênteses: opcionais)' : '');
+  } else {
+    const def = findLibraryItem(SCALE_LIBRARY, lib.scaleId);
+    lib.windows = scalePositionWindows(state.tuning, state.numFrets, lib.root, def.iv);
+    els.libScalePos.innerHTML = '';
+    const all = document.createElement('option');
+    all.value = 'all'; all.textContent = 'Braço inteiro';
+    els.libScalePos.appendChild(all);
+    lib.windows.forEach((w, k) => {
+      const opt = document.createElement('option');
+      opt.value = String(k);
+      opt.textContent = `Posição ${k + 1} · casas ${w.lo}–${w.hi}`;
+      els.libScalePos.appendChild(opt);
+    });
+    if(lib.scalePos !== 'all' && Number(lib.scalePos) >= lib.windows.length) lib.scalePos = 'all';
+    els.libScalePos.value = String(lib.scalePos);
+    const names = def.iv.map(iv => noteName(lib.root + iv, state.enharmonic)).join(' · ');
+    els.libInfo.textContent = `${noteName(lib.root, state.enharmonic)} ${def.label} — ${def.iv.length} notas: ${names}`;
+  }
+}
+
+function finishLibraryApply(message){
+  state.selectedIndex = -1;
+  updateInfo(); updateSuggestion(); draw();
+  showToast(message);
+  // No celular o menu cobre a tela inteira: fecha para mostrar o resultado.
+  if(window.matchMedia('(max-width: 700px)').matches) setMenuOpen(false);
+}
+
+function applyLibraryChord(){
+  const def = findLibraryItem(CHORD_LIBRARY, lib.chordId);
+  const voicings = currentChordVoicings();
+  const v = voicings[Math.min(lib.voicingIdx, voicings.length - 1)];
+  if(!v){ showToast('Nenhuma forma encontrada para essa afinação'); return; }
+  pushHistory();
+  const n = state.numStrings;
+  const fingers = assignChordFingers(v, n);
+  const markers = [];
+  const status = new Array(n).fill('muted');
+  for(let i = 0; i < n; i++){
+    const f = v.frets[i];
+    if(f < 0) continue;
+    status[i] = 'none';
+    markers.push({
+      stringIndex: i, fret: f, finger: fingers[i], enh: null,
+      root: pitchClass(state.tuning[i] + f) === lib.root
+    });
+  }
+  state.markers = markers;
+  state.stringStatus = status;
+  finishLibraryApply(chordFullName(def, lib.inversion) + ' · forma ' + (lib.voicingIdx + 1));
+}
+
+function applyLibraryScale(){
+  const def = findLibraryItem(SCALE_LIBRARY, lib.scaleId);
+  let lo = 0, hi = state.numFrets;
+  if(lib.scalePos !== 'all'){
+    const w = scalePositionWindows(state.tuning, state.numFrets, lib.root, def.iv)[Number(lib.scalePos)];
+    if(w){ lo = w.lo; hi = w.hi; }
+  }
+  const notes = scaleNotesInRange(state.tuning, state.numFrets, lib.root, def.iv, lo, hi);
+  if(!notes.length){ showToast('Nenhuma nota dessa escala nesse trecho do braço'); return; }
+  pushHistory();
+  state.markers = notes.map(nt => ({
+    stringIndex: nt.stringIndex, fret: nt.fret, finger: null, enh: null,
+    root: pitchClass(state.tuning[nt.stringIndex] + nt.fret) === lib.root
+  }));
+  state.stringStatus = new Array(state.numStrings).fill('none');
+  finishLibraryApply(`${noteName(lib.root, state.enharmonic)} ${def.label}`);
+}
+
+function initLibraryTab(){
+  populateGroupedSelect(els.libChordType, CHORD_LIBRARY, lib.chordId);
+  populateGroupedSelect(els.libScaleType, SCALE_LIBRARY, lib.scaleId);
+
+  els.libModeChord.addEventListener('click', () => { lib.mode = 'chord'; refreshLibrary(); });
+  els.libModeScale.addEventListener('click', () => { lib.mode = 'scale'; refreshLibrary(); });
+  els.libRoot.addEventListener('change', () => { lib.root = parseInt(els.libRoot.value, 10); lib.voicingIdx = 0; refreshLibrary(); });
+  els.libChordType.addEventListener('change', () => { lib.chordId = els.libChordType.value; lib.inversion = 0; lib.voicingIdx = 0; refreshLibrary(); });
+  els.libInversion.addEventListener('change', () => { lib.inversion = parseInt(els.libInversion.value, 10); lib.voicingIdx = 0; refreshLibrary(); });
+  els.libVoicing.addEventListener('change', () => { lib.voicingIdx = parseInt(els.libVoicing.value, 10) || 0; });
+  els.libScaleType.addEventListener('change', () => { lib.scaleId = els.libScaleType.value; lib.scalePos = 'all'; refreshLibrary(); });
+  els.libScalePos.addEventListener('change', () => { lib.scalePos = els.libScalePos.value; });
+  els.libApply.addEventListener('click', () => { if(lib.mode === 'chord') applyLibraryChord(); else applyLibraryScale(); });
+
+  // As formas dependem da afinação/nº de cordas atuais: recalcula ao abrir a aba.
+  document.querySelector('.tab-btn[data-tab="biblioteca"]').addEventListener('click', refreshLibrary);
+  refreshLibrary();
+}
+
+/* ============================================================
+   12. SINCRONIZAÇÃO DE UI ↔ ESTADO
+============================================================ */
+function fullResync(){
+  els.numStrings.value = String(state.numStrings);
+  els.numFrets.value = String(state.numFrets);
+  els.handedness.value = state.handedness;
+  els.orientation.value = state.orientation;
+  els.tuningPreset.value = state.tuningPreset;
+  els.displayMode.value = state.displayMode;
+  els.markerShape.value = state.markerShape;
+  els.stringColor.value = state.stringColor;
+  els.fretThickness.value = String(state.fretThickness);
+  els.fretThicknessOut.textContent = state.fretThickness;
+  toggleChips(state.enharmonic === 'sharp' ? els.enhSharp : els.enhFlat, state.enharmonic === 'sharp' ? els.enhFlat : els.enhSharp);
+  toggleChips(state.showInlays ? els.inlayOn : els.inlayOff, state.showInlays ? els.inlayOff : els.inlayOn);
+  toggleChips(state.colorByNote ? els.colorByNoteOn : els.colorByNoteOff, state.colorByNote ? els.colorByNoteOff : els.colorByNoteOn);
+  toggleChips(state.showStaff ? els.staffOn : els.staffOff, state.showStaff ? els.staffOff : els.staffOn);
+  refreshNoteSelects();
+  resizeCanvas();
+  updateInfo();
+  updateSuggestion();
+  updateHistoryButtons();
+}
+
+/* ============================================================
+   13. LINK COMPARTILHÁVEL (carregar do hash na inicialização)
+============================================================ */
+function loadFromHash(){
+  const hash = location.hash || '';
+  if(!hash.startsWith('#d=')) return false;
+  try {
+    const data = JSON.parse(decodeURIComponent(atob(hash.slice(3))));
+    applySnapshot(data);
+    showToast('Diagrama carregado do link compartilhado');
+    return true;
+  } catch(e){ return false; }
+}
+
+/* ============================================================
+   14. INICIALIZAÇÃO
+============================================================ */
+function init(){
+  cacheEls();
+  // No celular, o braço na vertical aproveita melhor a tela (mais alto que
+  // largo, como o instrumento de verdade) — esse é o padrão inicial ali,
+  // mas um link compartilhado ou um diagrama salvo continuam podendo
+  // sobrescrever a orientação normalmente.
+  if(window.matchMedia('(max-width: 700px)').matches){
+    state.orientation = 'vertical';
+  }
+  initTheme();
+  initTabs();
+  initMenu();
+  initBracoTab();
+  initEstiloTab();
+  initAcoesTab();
+  initLibraryTab();
+
+  els.canvas.addEventListener('click', handleCanvasClick);
+  els.canvas.addEventListener('dblclick', handleCanvasDblClick);
+  els.canvas.addEventListener('contextmenu', handleContextMenu);
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('resize', () => {
+    clearTimeout(window._resizeTimer);
+    window._resizeTimer = setTimeout(resizeCanvas, 80);
+  });
+  document.addEventListener('fullscreenchange', () => { if(!document.fullscreenElement) resizeCanvas(); });
+
+  renderStringTuner();
+  if(!loadFromHash()){
+    els.orientation.value = state.orientation;
+    resizeCanvas();
+    updateInfo();
+    updateHistoryButtons();
+  }
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+
+</script>
+</body>
+</html>
